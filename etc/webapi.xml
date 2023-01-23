@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Webapi:etc/webapi.xsd">
+    <route url="/V1/webshopnl/order/:store_id" method="POST">
+        <service class="WebshopNL\Connect\Api\Webapi\OrderInterface" method="processOrder"/>
+        <resources>
+            <resource ref="WebshopNL_Connect::webapi"/>
+        </resources>
+	</route>
+    <route url="/V1/webshopnl/status/:order_id" method="GET">
+        <service class="WebshopNL\Connect\Api\Webapi\OrderInterface" method="getStatus"/>
+        <resources>
+            <resource ref="WebshopNL_Connect::webapi"/>
+        </resources>
+    </route>
+    <route url="/V1/webshopnl/info" method="GET">
+        <service class="WebshopNL\Connect\Api\Webapi\InfoInterface" method="getInfo"/>
+        <resources>
+            <resource ref="WebshopNL_Connect::webapi"/>
+        </resources>
+    </route>
+</routes>
+

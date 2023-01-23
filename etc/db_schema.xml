@@ -1,0 +1,25 @@
+<?xml version="1.0" ?>
+<!--
+  ~ Copyright © Magmodules.eu. All rights reserved.
+  ~ See COPYING.txt for license details.
+  -->
+<schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
+    <table name="sales_order">
+        <column name="webshopnl_order_id"
+                xsi:type="varchar"
+                length="255"
+                nullable="true"
+                comment="Webshopnl Order ID"
+        />
+    </table>
+
+    <table name="sales_order_grid">
+        <column name="webshopnl_order_id"
+                xsi:type="varchar"
+                length="255"
+                nullable="true"
+                comment="Webshopnl Order ID"
+        />
+    </table>
+</schema>

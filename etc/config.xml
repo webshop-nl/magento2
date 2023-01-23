@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © Magmodules.eu. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <webshopnl>
+            <general>
+                <version>v1.0.0</version>
+                <enable>0</enable>
+                <debug>0</debug>
+            </general>
+            <feed>
+                <enable>0</enable>
+                <filename>webshop.xml</filename>
+                <name_attribute>name</name_attribute>
+                <description_attribute>short_description</description_attribute>
+                <description_long_attribute>description</description_long_attribute>
+                <image>image</image>
+                <brand_attribute>manufacturer</brand_attribute>
+                <ean_attribute>sku</ean_attribute>
+                <size_attribute>size</size_attribute>
+                <color_attribute>color</color_attribute>
+                <material_attribute>material</material_attribute>
+                <gender_attribute>gender</gender_attribute>
+            </feed>
+            <order>
+                <shipping_method>webshopnl_webshopnl</shipping_method>
+            </order>
+        </webshopnl>
+        <payment>
+            <webshopnl>
+                <active>1</active>
+                <model>WebshopNL\Connect\Model\Payment\Webshopnl</model>
+                <order_status>pending</order_status>
+                <title>Webshopnl Payment</title>
+                <allowspecific>0</allowspecific>
+            </webshopnl>
+        </payment>
+        <carriers>
+            <webshopnl>
+                <active>1</active>
+                <sallowspecific>0</sallowspecific>
+                <model>WebshopNL\Connect\Model\Carrier\Webshopnl</model>
+                <name>Webshopnl Shipping</name>
+                <title>Webshopnl</title>
+                <price>0.00</price>
+                <type>I</type>
+                <overwrite_title>0</overwrite_title>
+                <overwrite_name>0</overwrite_name>
+            </webshopnl>
+        </carriers>
+    </default>
+</config>

@@ -1,0 +1,229 @@
+/**
+  * Copyright © webshopnl. All rights reserved.
+  * See COPYING.txt for license details.
+  */
+
+@import '_icons.less';
+@import './variables/_colors.less';
+
+.webshopnl-header,
+.webshopnl-heading-block {
+    border: 0.1rem solid @color-gray90;
+    border-left: 3px solid @bordercolor;
+    font-size: 1.3rem;
+    display: flow-root;
+    text-align: left;
+}
+
+.webshopnl-heading-block {
+    background: @color-white-fog;
+    padding: 1rem;
+    text-align: left;
+    color: @webshopnl-color__1;
+}
+
+.webshopnl-heading-comment {
+    padding: 1rem 0rem 0rem 1rem;
+    font-size: 1.2rem;
+    line-height: 2.5rem;
+    border-left: 4px solid @color-white-fog;
+}
+
+.webshopnl-recommend {
+    color: @bordercolor;
+    font-weight: 600;
+    display: block;
+    padding: 3px 0px 3px 0px;
+}
+
+.webshopnl-header {
+    background: #f8f8f8;
+    padding: 2rem;
+    background-image: url(https://assets.webshop.nl/uploads/2021/05/logo-webshop.nl-blue.svg);
+    color: #121212;
+    background-repeat: no-repeat;
+    background-position: 30px 20px;
+    background-size: 370px;
+
+    &-text {
+        line-height: 3rem;
+        font-size: 14px;
+        margin-left: 450px;
+        max-width: 270px;
+        display: block;
+        float: left;
+    }
+
+
+    &-actions {
+        float: right;
+
+        i {
+            font-size: 1.5rem;
+            vertical-align: middle;
+            line-height: 1.5rem;
+        }
+    }
+}
+
+
+/*buttons*/
+.webshopnl-show-more-actions {
+
+    a {
+        text-decoration: underline;
+        color: @webshopnl-color__orange;
+    }
+
+    .webshopnl-show-btn-less {
+        display: none;
+    }
+}
+
+.block-webshopnl-feeds .title {
+    clear: both;
+    color: #0A0A0A;
+    cursor: pointer;
+    display: block;
+    font-size: 1.7rem;
+    font-weight: 600;
+    letter-spacing: .025em;
+    padding: 1.9rem 2.8rem 1.9rem 0;
+    position: relative;
+    text-decoration: none;
+    transition: color .15s linear;
+}
+
+.block-webshopnl-feeds-table {
+    border-top: 1px solid rgba(81, 73, 67, 0.15);
+    width: 99%;
+    color: #666;
+    text-align: left;
+    border-right: 1px solid rgb(223, 222, 221);
+    border-left: 2px solid #EA4C00;
+    font-size: 14px;
+    margin: 20px 0 0;
+    padding: 20px;
+    background: #F8F8F8;
+}
+
+.block-webshopnl-feeds-table tr {
+    border-bottom: 1px solid #DFDEDD;
+}
+
+.block-webshopnl-feeds-table tr td {
+    padding: 10px;
+}
+
+.block-webshopnl-feeds-table a.generate {
+    color: #EB5202;
+    line-height: 2em;
+}
+
+.block-webshopnl-feeds-table a.generate:before {
+    content: '\e610';
+    font-family: 'Admin Icons';
+    margin-right: 9px;
+    font-size: 16px;
+    float: left;
+}
+
+.block-webshopnl-feeds-table a.preview {
+    color: #185B00;
+    line-height: 2em;
+}
+
+.block-webshopnl-feeds-table a.preview:before {
+    content: '\e60f';
+    font-family: 'Admin Icons';
+    margin-right: 9px;
+    font-size: 9px;
+    float: left;
+}
+
+.block-webshopnl-feeds-table a.download:before {
+    content: '\e616';
+    font-family: 'Admin Icons';
+    font-size: 15px;
+    margin-right: 10px;
+    float: left;
+}
+
+.block-webshopnl-feeds-table a.download {
+    color: #666666;
+    line-height: 2em;
+}
+
+.block-webshopnl-feeds-table .enable {
+    color: #eb5203;
+    line-height: 2em;
+}
+
+.block-webshopnl-feeds-table .enable small {
+    color: grey;
+}
+
+.block-webshopnl-feeds-table .enable:before {
+    content: '\e623';
+    font-family: 'Admin Icons';
+    margin-right: 9px;
+    font-size: 12px;
+    float: left;
+}
+
+
+.admin__page-nav._collapsed.webshopnl-plugin .title, .admin__page-nav._collapsed._show.webshopnl-plugin .title {
+    background-image: url('data:image/png;base64,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');
+    background-position: 15px center;
+    background-repeat: no-repeat;
+    text-indent: 40px;
+    background-size: auto 50%;
+}
+
+#webshopnl-button_help {
+    background: #4e91ce;
+    color: white;
+    font-weight: 700;
+    font-size: 14px;
+    padding: 1rem;
+    line-height: 20px;
+    border: none;
+    display: block;
+    min-width: 160px;
+    margin-bottom: 10px;
+    vertical-align: top;
+    text-align: center;
+    border-radius: 2px;
+}
+
+#webshopnl-button_support {
+    background: #73b72b;
+    color: white;
+    font-weight: 700;
+    font-size: 14px;
+    padding: 1rem;
+    line-height: 20px;
+    border: none;
+    display: block;
+    min-width: 160px;
+    margin-bottom: 10px;
+    vertical-align: top;
+    text-align: center;
+    border-radius: 2px;
+}
+
+#webshopnl-button_register {
+    background: #f4982b;
+    color: white;
+    font-weight: 700;
+    font-size: 14px;
+    padding: 1rem;
+    line-height: 20px;
+    border: none;
+    display: block;
+    min-width: 165px;
+    margin-bottom: 10px;
+    vertical-align: top;
+    text-align: center;
+    border-radius: 2px;
+}

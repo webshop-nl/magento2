@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © Magmodules.eu. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <preference for="WebshopNL\Connect\Api\Config\RepositoryInterface"
+                type="WebshopNL\Connect\Model\Config\Repository"/>
+    <preference for="WebshopNL\Connect\Api\Config\System\OrderInterface"
+                type="WebshopNL\Connect\Model\Config\System\OrderRepository"/>
+    <preference for="WebshopNL\Connect\Api\Log\RepositoryInterface"
+                type="WebshopNL\Connect\Model\Log\Repository"/>
+
+    <preference for="WebshopNL\Connect\Api\Feed\RepositoryInterface"
+                type="WebshopNL\Connect\Model\Feed\Repository"/>
+    <preference for="WebshopNL\Connect\Api\ProductData\RepositoryInterface"
+                type="WebshopNL\Connect\Model\ProductData\Repository"/>
+    <preference for="WebshopNL\Connect\Api\Config\System\FeedInterface"
+                type="WebshopNL\Connect\Model\Config\System\FeedRepository"/>
+    <preference for="WebshopNL\Connect\Api\Webapi\OrderInterface"
+                type="WebshopNL\Connect\Model\Webapi\Order" />
+    <preference for="WebshopNL\Connect\Api\Webapi\InfoInterface"
+                type="WebshopNL\Connect\Model\Webapi\Info" />
+
+    <type name="WebshopNL\Connect\Logger\ErrorLogger">
+        <arguments>
+            <argument name="name" xsi:type="string">WebshopnlError</argument>
+            <argument name="handlers" xsi:type="array">
+                <item name="system" xsi:type="object">WebshopNL\Connect\Logger\Handler\Error</item>
+            </argument>
+        </arguments>
+    </type>
+    <type name="WebshopNL\Connect\Logger\DebugLogger">
+        <arguments>
+            <argument name="name" xsi:type="string">WebshopnlDebug</argument>
+            <argument name="handlers" xsi:type="array">
+                <item name="system" xsi:type="object">WebshopNL\Connect\Logger\Handler\Debug</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <type name="Magento\Framework\Console\CommandList">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="webshopnlGenerateFeed" xsi:type="object">WebshopNL\Connect\Console\Command\GenerateFeed</item>
+            </argument>
+        </arguments>
+    </type>
+    <type name="WebshopNL\Connect\Console\Command\GenerateFeed">
+        <arguments>
+            <argument name="feedRepository" xsi:type="object">WebshopNL\Connect\Api\Feed\RepositoryInterface\Proxy</argument>
+        </arguments>
+    </type>
+
+    <type name="Magento\Sales\Api\OrderRepositoryInterface">
+        <plugin name="webshopnl_order_id" type="WebshopNL\Connect\Plugin\Sales\AddWebshopnlOrderIdToOrder" />
+    </type>
+</config>

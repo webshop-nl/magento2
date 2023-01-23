@@ -1,0 +1,31 @@
+<?php
+/**
+ * Copyright © Magmodules.eu. All rights reserved.
+ * See COPYING.txt for license details.
+ *
+ * @var $block WebshopNL\Connect\Block\Adminhtml\WebshopNL\Header
+ */
+?>
+<div class="webshopnl-header">
+    <div class="">
+        <p class="webshopnl-header-text">
+            <strong>Webshop.nl Magento Plugin</strong><br>
+            Connect your Magento store with the Webshop Marketplace to succeed.
+        </p>
+    </div>
+    <div class="webshopnl-header-actions">
+        <a id="webshopnl-button_help"
+           class="helpbutton"
+           href="<?= $block->escapeUrl($block->getSupportLink()); ?>"
+           target="_blank">
+            <i class="webshopnl-icon__question-circled"></i>
+            <span><?= $block->escapeUrl(__('Manual & Support')); ?></span>
+        </a>
+        <button id="webshopnl-button_register" title="<?= $block->escapeUrl(__('Register now')); ?>"
+                type="button" class="action-default scalable"
+                onclick="window.open('<?= $block->escapeUrl($block->getRegisterLink()); ?>')">
+            <i class="webshopnl-icon__list-unordered-four"></i>
+            <span><?= $block->escapeUrl(__('Register now')); ?></span>
+        </button>
+    </div>
+</div>

@@ -1,0 +1,82 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © Magmodules.eu. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+-->
+<include xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_include.xsd">
+    <group id="branding" translate="label" type="text" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1">
+        <label>Branding</label>
+        <frontend_model>WebshopNL\Connect\Block\Adminhtml\WebshopNL\Header</frontend_model>
+    </group>
+    <group id="general" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+        <label>General</label>
+        <attribute type="expanded">1</attribute>
+        <field id="enable" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Enable</label>
+            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+            <config_path>webshopnl/general/enable</config_path>
+        </field>
+    </group>
+    <group id="order" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+        <label>Settings</label>
+        <comment>Configure the settings on how to import the orders from the Webshopnl Marketplaces into your Magento store.</comment>
+        <field id="heading_shipment" translate="label comment" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Shipping Method</label>
+            <frontend_model>WebshopNL\Connect\Block\Adminhtml\WebshopNL\Heading</frontend_model>
+            <comment>Select the shipping method that you want to use on the order import.</comment>
+        </field>
+        <field id="shipping_method" translate="label" type="select" sortOrder="21" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Default Shipping Method</label>
+            <source_model>WebshopNL\Connect\Model\Config\Source\ShippingMethods</source_model>
+            <config_path>webshopnl/order/shipping_method</config_path>
+        </field>
+        <field id="shipping_method_fallback" translate="label" type="select" sortOrder="23" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Fallback for Shipping Method</label>
+            <source_model>Magento\Shipping\Model\Config\Source\Allmethods</source_model>
+            <config_path>webshopnl/order/shipping_method_fallback</config_path>
+        </field>
+        <field id="heading_customer" translate="label comment" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Customers</label>
+            <frontend_model>WebshopNL\Connect\Block\Adminhtml\WebshopNL\Heading</frontend_model>
+            <comment>Select if you want to add customers to your Magento store.</comment>
+        </field>
+        <field id="import_customer" translate="label" type="select" sortOrder="31" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Import Customers</label>
+            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+            <config_path>webshopnl/order/import_customer</config_path>
+        </field>
+        <field id="customers_group" translate="label" type="select" sortOrder="32" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Customer Group</label>
+            <source_model>WebshopNL\Connect\Model\Config\Source\CustomerGroups</source_model>
+            <config_path>webshopnl/order/customers_group</config_path>
+            <depends>
+                <field id="import_customer">1</field>
+            </depends>
+        </field>
+        <field id="heading_customer_address" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Address &amp; Invoice</label>
+            <frontend_model>WebshopNL\Connect\Block\Adminhtml\WebshopNL\Heading</frontend_model>
+            <comment>Configure the way the addresses and invoices are handled in the order import.</comment>
+        </field>
+        <field id="separate_house_number" translate="label" type="select" sortOrder="41" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Separate house number</label>
+            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+            <config_path>webshopnl/order/separate_house_number</config_path>
+            <comment><![CDATA[If you use the second 'street' field as a separate house-number field, enable this option.]]></comment>
+        </field>
+        <field id="order_email" translate="label" type="select" sortOrder="42" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Send order e-mail to the customer</label>
+            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+            <config_path>webshopnl/order/order_email</config_path>
+            <comment>Enable if you want to send the invoice from Magento for Marketplace orders.></comment>
+        </field>
+        <field id="invoice_order_email" translate="label" type="select" sortOrder="44" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Send invoice e-mail to the customer</label>
+            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+            <config_path>webshopnl/order/invoice_order_email</config_path>
+            <comment>Enable if you want to send the invoice from Magento for Marketplace orders.></comment>
+        </field>
+    </group>
+</include>

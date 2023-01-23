@@ -1,0 +1,108 @@
+/**
+  * Copyright © Magmodules.eu. All rights reserved.
+  * See COPYING.txt for license details.
+  */
+
+@import "variables/_icons.less";
+
+@icons-webshopnl__font-name: 'webshopnl-icons';
+@icons-webshopnl__file-name: @icons-webshopnl__font-name;
+
+.lib-font-face(
+    @family-name: @icons-webshopnl__font-name,
+    @font-path: '@{baseDir}WebshopNL_Connect/fonts/@{icons-webshopnl__file-name}/@{icons-webshopnl__file-name}',
+    @font-weight: normal,
+    @font-style: normal
+);
+
+[class^="webshopnl-"]:before,
+[class*=" webshopnl-"]:before {
+    font-family: @icons-webshopnl__font-name;
+    font-style: normal;
+    font-weight: normal;
+    speak: never;
+    display: inline-block;
+    text-decoration: inherit;
+    width: 2.5rem;
+    margin-right: 0.5rem;
+    text-align: center;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 2.5rem;
+    margin-left: 0.5rem;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.webshopnl-icon__download-alt:before {
+    content: @webshopnl-icon__download-alt;
+    line-height: normal !important;
+}
+
+.webshopnl-icon__list:before {
+    content: @webshopnl-icon__list;
+}
+
+.webshopnl-icon__webshopnl:before {
+    content: @webshopnl-icon__webshopnl;
+}
+
+.webshopnl-icon__list-unordered:before {
+    content: @webshopnl-icon__list-unordered;
+}
+
+.webshopnl-icon__help-rounded:before {
+    content: @webshopnl-icon__help-rounded;
+}
+
+.webshopnl-icon__thumbs-down:before {
+    content: @webshopnl-icon__thumbs-down;
+}
+
+.webshopnl-icon__thumbs-up:before {
+    content: @webshopnl-icon__thumbs-up;
+}
+
+.webshopnl-icon__font-icons:before {
+    content: @webshopnl-icon__font-icons;
+}
+
+.webshopnl-icon__info-rounded1:before {
+    content: @webshopnl-icon__info-rounded1;
+}
+
+.webshopnl-icon__download:before {
+    content: @webshopnl-icon__download;
+}
+
+.webshopnl-icon__external-link:before {
+    content: @webshopnl-icon__external-link;
+}
+
+.webshopnl-icon__notification-rounded:before {
+    content: @webshopnl-icon__notification-rounded;
+}
+
+.webshopnl-icon__envelop:before {
+    content: @webshopnl-icon__envelop;
+}
+
+.webshopnl-icon__list-unordered-four:before {
+    content: @webshopnl-icon__list-unordered-four;
+}
+
+.webshopnl-icon__question-circled:before {
+    content: @webshopnl-icon__question-circled;
+}
+
+.webshopnl-icon__list-thumbnails:before {
+    content: @webshopnl-icon__list-thumbnails;
+}
+
+.webshopnl-icon__repeat:before {
+    content: @webshopnl-icon__repeat;
+}
+
+.webshopnl-icon__info-rounded0:before {
+    content: @webshopnl-icon__info-rounded0;
+}
