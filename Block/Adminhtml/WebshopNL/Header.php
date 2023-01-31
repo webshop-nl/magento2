@@ -109,6 +109,7 @@ class Header extends Field
     private function getEncodedStoreData(): string
     {
         return base64_encode($this->json->serialize([
+            'type' => 'magento',
             'company_name' => $this->getStoreData('general/store_information/name'),
             'vat_id' => $this->getStoreData('general/store_information/merchant_vat_number'),
             'address' => $this->getStreet($this->getStoreData('general/store_information/street_line1')),
