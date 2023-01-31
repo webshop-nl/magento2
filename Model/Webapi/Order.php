@@ -15,6 +15,7 @@ use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Api\OrderRepositoryInterface as MagentoOrderRepository;
+use WebshopNL\Connect\Api\Config\RepositoryInterface as ConfigRepository;
 use WebshopNL\Connect\Api\Config\System\OrderInterface as OrderInterfaceAlias;
 use WebshopNL\Connect\Api\Log\RepositoryInterface as LogRepository;
 use WebshopNL\Connect\Api\Webapi\OrderInterface;
@@ -65,6 +66,10 @@ class Order implements OrderInterface
      * @var OrderRepositoryInterface
      */
     private $orderRepository;
+    /**
+     * @var ConfigRepository
+     */
+    private $configRepository;
 
     /**
      * Order constructor.
@@ -88,7 +93,8 @@ class Order implements OrderInterface
         TimezoneInterface $date,
         MagentoOrderRepository $magentoOrderRepository,
         SearchCriteriaBuilder $searchCriteriaBuilder,
-        OrderRepositoryInterface $orderRepository
+        OrderRepositoryInterface $orderRepository,
+        ConfigRepository $configRepository
     ) {
         $this->logRepository = $logRepository;
         $this->jsonSerializer = $jsonSerializer;
@@ -99,6 +105,7 @@ class Order implements OrderInterface
         $this->magentoOrderRepository = $magentoOrderRepository;
         $this->searchCriteriaBuilder = $searchCriteriaBuilder;
         $this->orderRepository = $orderRepository;
+        $this->configRepository = $configRepository;
     }
 
     /**
@@ -117,6 +124,7 @@ class Order implements OrderInterface
                 if ($orders) {
                     return [
                         [
+                            'module_version' => $this->configRepository->getExtensionVersion(),
                             'order_id' => $orderData['order_id'],
                             'merchant_id' => $orderData['merchant_id'],
                             'status' => "REJECTED",
@@ -138,6 +146,7 @@ class Order implements OrderInterface
             if ($order->getIncrementId()) {
                 return [
                     [
+                        'module_version' => $this->configRepository->getExtensionVersion(),
                         'order_id' => $orderData['order_id'],
                         'remote_order_id' => $order->getId(),
                         'merchant_id' => $orderData['merchant_id'],
@@ -148,6 +157,7 @@ class Order implements OrderInterface
             } else {
                 return [
                     [
+                        'module_version' => $this->configRepository->getExtensionVersion(),
                         'order_id' => $orderData['order_id'],
                         'merchant_id' => $orderData['merchant_id'],
                         'status' => "REJECTED",
@@ -160,6 +170,7 @@ class Order implements OrderInterface
             $this->logRepository->addErrorLog('Webhook processTransfer postData', $exception->getMessage());
             return [
                 [
+                    'module_version' => $this->configRepository->getExtensionVersion(),
                     'order_id' => $orderData['order_id'] ?? null,
                     'merchant_id' => $orderData['merchant_id'] ?? null,
                     'status' => "REJECTED",
@@ -214,6 +225,7 @@ class Order implements OrderInterface
 
         return [
             [
+                'module_version' => $this->configRepository->getExtensionVersion(),
                 'id' => $orderId,
                 'status' => $order->getStatus(),
                 'shipment_available' => $order->hasShipments()
