@@ -75,11 +75,14 @@ class Info implements InfoInterface
      */
     private function getFeedUrls(): array
     {
-        $urls = [];
+        $feedUrls = [];
         foreach ($this->storeManager->getStores() as $store) {
-            $urls[] = $this->feedRepository->getFeedLocation((int)$store->getId())['url'];
+            $feedUrls[] = [
+                'store' => $store->getId(),
+                'url' => $this->feedRepository->getFeedLocation((int)$store->getId())['url']
+            ];
         }
-        return $urls;
+        return $feedUrls;
     }
 
     /**
@@ -106,6 +109,7 @@ class Info implements InfoInterface
         foreach ($this->storeManager->getStores() as $store) {
             if ($this->configRepository->isEnabled((int)$store->getId()) && $store->getIsActive()) {
                 $storeIds[] = [
+                    'integration' => $this->configRepository->isEnabled((int)$store->getId()),
                     'store_id' => (int)$store->getId(),
                     'store_name' => $store->getName()
                 ];
