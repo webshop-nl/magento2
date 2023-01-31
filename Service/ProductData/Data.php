@@ -7,8 +7,6 @@ declare(strict_types=1);
 
 namespace WebshopNL\Connect\Service\ProductData;
 
-use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
-
 /**
  * Data class
  * Collecting products data according provided IDs and attributes to fetch
