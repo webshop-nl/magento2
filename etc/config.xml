@@ -12,11 +12,12 @@
             <general>
                 <version>v1.0.2</version>
                 <enable>0</enable>
+                <mode>development</mode>
                 <debug>0</debug>
             </general>
             <feed>
                 <enable>0</enable>
-                <filename>webshop.xml</filename>
+                <filename>webshop.ndjson</filename>
                 <name_attribute>name</name_attribute>
                 <description_attribute>short_description</description_attribute>
                 <description_long_attribute>description</description_long_attribute>

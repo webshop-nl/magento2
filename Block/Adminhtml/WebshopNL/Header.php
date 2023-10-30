@@ -13,6 +13,8 @@ use Magento\Framework\App\Config\ScopeConfigInterface as ScopeConfig;
 use Magento\Framework\Data\Form\Element\AbstractElement;
 use Magento\Framework\Serialize\Serializer\Json;
 use WebshopNL\Connect\Api\Config\RepositoryInterface as ConfigRepository;
+use WebshopNL\Connect\Service\WebApi\Integration;
+use Magento\Store\Model\StoreManagerInterface;
 
 /**
  * System Configuration Module information Block
@@ -33,8 +35,16 @@ class Header extends Field
      * @var ScopeConfig
      */
     private $scopeConfig;
-
+    /**
+     * @var Json
+     */
     private $json;
+    /**
+     * @var Integration
+     */
+    private $integration;
+
+    private $storeManager;
 
     /**
      * Header constructor.
@@ -43,16 +53,21 @@ class Header extends Field
      * @param ConfigRepository $config
      * @param ScopeConfig $scopeConfig
      * @param Json $json
+     * @param Integration $integration
      */
     public function __construct(
         Context $context,
         ConfigRepository $config,
         ScopeConfig $scopeConfig,
-        Json $json
+        Json $json,
+        Integration $integration,
+        StoreManagerInterface $storeManager
     ) {
         $this->configRepository = $config;
         $this->scopeConfig = $scopeConfig;
         $this->json = $json;
+        $this->integration = $integration;
+        $this->storeManager = $storeManager;
         parent::__construct($context);
     }
 
@@ -100,7 +115,11 @@ class Header extends Field
      */
     public function getRegisterLink(): string
     {
-        return 'https://dev.partner.shipbox.io/register/?store_data=' . $this->getEncodedStoreData();
+        if ($this->configRepository->getMode() == 'development') {
+            return 'https://dev.partner.shipbox.io/register/?store_data=' . $this->getEncodedStoreData();
+        } else {
+            return 'https://partner.webshop.nl/register/?store_data=' . $this->getEncodedStoreData();
+        }
     }
 
     /**
@@ -110,13 +129,16 @@ class Header extends Field
     {
         return base64_encode($this->json->serialize([
             'type' => 'magento',
+            'installation_id' => $this->configRepository->getInstallationId(),
+            'token' => $this->integration->getToken(),
             'company_name' => $this->getStoreData('general/store_information/name'),
             'vat_id' => $this->getStoreData('general/store_information/merchant_vat_number'),
             'address' => $this->getStreet($this->getStoreData('general/store_information/street_line1')),
             'house_number' => $this->getHouseNumber($this->getStoreData('general/store_information/street_line1')),
             'postal_code' => $this->getStoreData('general/store_information/postcode'),
             'city' => $this->getStoreData('general/store_information/city'),
-            'country' => $this->getStoreData('general/store_information/country_id')
+            'country' => $this->getStoreData('general/store_information/country_id'),
+            'info' => $this->storeManager->getStore()->getBaseUrl() . 'rest/V1/webshopnl/info'
         ]));
     }
 

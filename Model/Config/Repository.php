@@ -50,6 +50,14 @@ class Repository extends System\OrderRepository implements ConfigRepositoryInter
     /**
      * @inheritDoc
      */
+    public function getMode(): string
+    {
+        return $this->getStoreValue(self::XML_PATH_MODE);
+    }
+
+    /**
+     * @inheritDoc
+     */
     public function getSupportLink(): string
     {
         return sprintf(
@@ -64,5 +72,13 @@ class Repository extends System\OrderRepository implements ConfigRepositoryInter
     public function getExtensionCode(): string
     {
         return self::EXTENSION_CODE;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getInstallationId(): string
+    {
+        return (string)$this->getStoreValue(self::XML_PATH_INSTALLATION_ID);
     }
 }
