@@ -9,10 +9,10 @@
 <?php if ($feedData = $block->getStoreData()): ?>
     <div class="block-webshopnl-feeds">
         <span class="title"><?= $block->escapeHtml(__('Feeds')) ?></span>
-        <?= /* @noEscape */ (string)__('All active feeds are shown in the overview below.<br>The .XML URL is the URL
+        <?= /* @noEscape */ (string)__('All active feeds are shown in the overview below.<br>The .NDJSON URL is the URL
 which needs to be copied and pasted into you Webshopnl Account. In relation to cache settings in the browser, it is
 advised that you download the Feed to make sure that you are viewing the latest version. There is a small note at
-the end of the XML file where you can find the time of generation and the number of products.<br><br>
+the end of the NDJSON file where you can find the time of generation and the number of products.<br><br>
 <strong>Note:</strong> Make sure that you save the configuration after the settings have been changed and before you
 generate the feed.'); ?>
         <table class="block-webshopnl-feeds-table">

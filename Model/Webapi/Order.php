@@ -228,8 +228,29 @@ class Order implements OrderInterface
                 'module_version' => $this->configRepository->getExtensionVersion(),
                 'id' => $orderId,
                 'status' => $order->getStatus(),
-                'shipment_available' => $order->hasShipments()
+                'shipment_available' => $order->hasShipments(),
+                'delivery_data' => $this->getDeliveryData($order)
             ]
         ];
+    }
+
+    /**
+     * @param \Magento\Sales\Api\Data\OrderInterface $order
+     * @return array
+     */
+    private function getDeliveryData(\Magento\Sales\Api\Data\OrderInterface $order)
+    {
+        $deliveryData = [];
+        foreach ($order->getShipmentsCollection() as $shipment) {
+            /** @var \Magento\Sales\Api\Data\TrackInterface $track */
+            foreach ($shipment->getTracksCollection()->getItems() as $track) {
+                $deliveryData[] = [
+                    'shipment_date' => $shipment->getCreatedAt(),
+                    'tracking_code' => $track->getTrackNumber(),
+                    'delivery_service' => $track->getTitle()
+                ];
+            }
+        }
+        return $deliveryData;
     }
 }

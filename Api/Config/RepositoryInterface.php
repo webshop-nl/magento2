@@ -18,7 +18,9 @@ interface RepositoryInterface extends System\OrderInterface
     public const EXTENSION_CODE = 'WebshopNL_Connect';
     public const XML_PATH_EXTENSION_VERSION = 'webshopnl/general/version';
     public const XML_PATH_EXTENSION_ENABLE = 'webshopnl/general/enable';
+    public const XML_PATH_MODE = 'webshopnl/general/mode';
     public const XML_PATH_DEBUG = 'webshopnl/general/debug';
+    public const XML_PATH_INSTALLATION_ID = 'webshopnl/general/installation_id';
     public const MODULE_SUPPORT_LINK = 'https://www.magmodules.eu/help/%s';
 
     /**
@@ -52,6 +54,13 @@ interface RepositoryInterface extends System\OrderInterface
     public function isEnabled(int $storeId = null): bool;
 
     /**
+     * Get mode.
+     *
+     * @return string
+     */
+    public function getMode(): string;
+
+    /**
      * Check if debug mode is enabled
      *
      * @param int|null $storeId
@@ -74,4 +83,11 @@ interface RepositoryInterface extends System\OrderInterface
      * @return string
      */
     public function getSupportLink(): string;
+
+    /**
+     * Installation id for webshop.
+     *
+     * @return string
+     */
+    public function getInstallationId(): string;
 }

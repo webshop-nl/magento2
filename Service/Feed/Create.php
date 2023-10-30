@@ -14,6 +14,8 @@ use Magento\Framework\Filesystem\Io\File;
  */
 class Create
 {
+    public const JSON_FORMAT_FULL = '"%s":"%s",';
+    public const JSON_FORMAT_OPENED = '"%s":{';
 
     /**
      * @var File
@@ -37,43 +39,39 @@ class Create
      */
     public function execute(array $feed, int $storeId, string $path)
     {
-        $xmlStr = <<<XML
-<?xml version="1.0" encoding="utf-8"?>
-XML;
-        $xmlStr .= $this->createXml($feed);
+        $ndjson = '';
+        foreach ($feed as $productsData) {
+            foreach ($productsData as $productData) {
+                $ndjson .= "{" . $this->createJson($productData) . "}\n";
+            }
+        }
 
         $fileInfo = $this->file->getPathInfo($path);
         $this->file->mkdir($fileInfo['dirname']);
-        $this->file->write($path, $xmlStr);
+        $this->file->write($path, $ndjson);
     }
 
     /**
      * @param array $data
      * @return string
      */
-    public function createXml($data)
+    public function createJson($data)
     {
-        $xmlStr = '';
+        $jsonStr = '';
         foreach ($data as $key => $value) {
-            if (is_numeric($key)) {
-                $key = 'item';
-            }
+
             if (!is_array($value)) {
-                // phpcs:ignore Magento2.Functions.DiscouragedFunction
-                $value = htmlspecialchars((string)$value, ENT_XML1, 'UTF-8');
-                $xmlStr .= <<<XML
-<$key>$value
-XML;
+                $jsonStr .= sprintf(self::JSON_FORMAT_FULL, $key, $value);
             } else {
-                $subData = $this->createXml($value);
-                $xmlStr .= <<<XML
-<$key>$subData
-XML;
+                $jsonStr .= sprintf(self::JSON_FORMAT_OPENED, $key);
+                foreach ($value as $nestedKey => $nestedValue) {
+                    $jsonStr .= sprintf(self::JSON_FORMAT_FULL, $nestedKey, $nestedValue);
+                }
+                $jsonStr = rtrim($jsonStr, ','); //remove last comma
+                $jsonStr .= '},';
             }
-            $xmlStr .= <<<XML
-</$key>
-XML;
         }
-        return $xmlStr;
+        $jsonStr = rtrim($jsonStr, ','); //remove last comma
+        return $jsonStr;
     }
 }

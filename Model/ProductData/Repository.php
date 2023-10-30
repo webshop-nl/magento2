@@ -26,7 +26,7 @@ class Repository implements ProductData
      * @var array
      */
     private $attributeMap = [
-        'entity_id' => 'entity_id',
+        'product_id' => 'entity_id',
         'sku' => 'sku',
         'visibility' => 'visibility',
         'type_id' => 'type_id',
@@ -38,7 +38,7 @@ class Repository implements ProductData
      * @var array
      */
     private $resultMap = [
-        'ID' => 'entity_id',
+        'ID' => 'product_id',
         'sku' => 'sku',
         'name' => 'name',
         'family_ID' => 'parent_id',
@@ -126,10 +126,10 @@ class Repository implements ProductData
 
         $result = [];
         foreach ($this->collectProductData($storeId, $type) as $entityId => $productData) {
-            if (isset($productData['tradetracker_exclude']) && $productData['tradetracker_exclude']) {
+            if (empty($productData['product_id'])) {
                 continue;
             }
-            $productData['entity_id'] = $entityId;
+            $productId = (int)$productData['product_id'];
             $this->addImageData($storeId, $entityId, $productData);
             $this->addStaticFields($productData);
             $this->addCategoryData($productData);
@@ -146,6 +146,7 @@ class Repository implements ProductData
                 }
             }
         }
+
         return $result;
     }
 

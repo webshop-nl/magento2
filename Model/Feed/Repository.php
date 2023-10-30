@@ -146,7 +146,7 @@ class Repository implements FeedRepository
     {
         $filename = $this->configRepository->getFilename((int)$storeId);
         if ($type == 'preview') {
-            $filename = str_replace('.xml', '-preview.xml', $filename);
+            $filename = str_replace('.ndjson', '-preview.ndjson', $filename);
         }
 
         $url = sprintf(

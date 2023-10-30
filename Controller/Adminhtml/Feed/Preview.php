@@ -13,7 +13,7 @@ use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Controller\ResultInterface;
 use Magento\Framework\Exception\FileSystemException;
-use Magento\Framework\Filesystem\DriverInterface;
+use Magento\Framework\Filesystem\Driver\File as DriverFile;
 use WebshopNL\Connect\Api\Feed\RepositoryInterface as FeedRepository;
 
 /**
@@ -32,7 +32,7 @@ class Preview extends Action
      */
     private $feedRepository;
     /**
-     * @var DriverInterface
+     * @var DriverFile
      */
     private $fileDriver;
     /**
@@ -44,13 +44,13 @@ class Preview extends Action
      * Generate constructor.
      * @param Action\Context $context
      * @param FeedRepository $feedRepository
-     * @param DriverInterface $fileDriver
+     * @param DriverFile $fileDriver
      * @param RedirectInterface $redirect
      */
     public function __construct(
         Action\Context $context,
         FeedRepository $feedRepository,
-        DriverInterface $fileDriver,
+        DriverFile $fileDriver,
         RedirectInterface $redirect
     ) {
         $this->feedRepository = $feedRepository;
@@ -77,7 +77,7 @@ class Preview extends Action
         }
 
         try {
-            $this->getResponse()->setHeader('Content-type', 'text/xml');
+            $this->getResponse()->setHeader('Content-type', 'application/stream+json');
             $this->getResponse()->setBody($this->fileDriver->fileGetContents($result['path']));
             return;
         } catch (FileSystemException $exception) {

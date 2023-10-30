@@ -28,9 +28,11 @@ class ShippingPrices extends ArraySerialized
                     unset($data[$key]);
                     continue;
                 }
-                $data[$key]['price_from'] = $this->formatPrice($row['price_from'] ?? 0);
-                $data[$key]['price_to'] = $this->formatPrice(!empty($row['price_to']) ? $row['price_to'] : 99999);
-                $data[$key]['price'] = $this->formatPrice($row['price']);
+                if (is_array($row)) {
+                    $data[$key]['price_from'] = $this->formatPrice($row['price_from'] ?? '0');
+                    $data[$key]['price_to'] = $this->formatPrice(!empty($row['price_to']) ? $row['price_to'] : '99999');
+                    $data[$key]['price'] = $this->formatPrice($row['price']);
+                }
             }
         }
         $this->setValue($data);
