@@ -2,10 +2,11 @@
     "name": "webshop-nl/magento2",
     "description": "Webshopnl extension for Magento 2",
     "type": "magento2-module",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "license": "BSD-2-Clause",
     "require": {
-        "magento/framework": ">=100.1.0"
+        "magento/framework": ">=103.0.6",
+        "php": ">=8.2.0"
     },
     "require-dev": {
         "phpstan/phpstan": "*"
