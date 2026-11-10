@@ -69,7 +69,8 @@ class CustomerHandler
      */
     public function assignCustomer(Quote $quote, array $orderData): Quote
     {
-        $websiteId = $quote->getStore()->getWebsiteId();
+        // getWebsiteId() is declared to return int|string|null and the customer API wants an int.
+        $websiteId = (int)$quote->getStore()->getWebsiteId();
         $storeId = $quote->getStoreId();
         $email = $this->cleanEmail($orderData['delivery_address']['email']);
 
@@ -78,7 +79,7 @@ class CustomerHandler
             $quote->setCustomerEmail($email);
             $quote->setCustomerFirstname($this->validateName($orderData['delivery_address']['first_name']));
             $quote->setCustomerLastname($this->validateName($orderData['delivery_address']['surname']));
-            $quote->setCustomerIsGuest(1);
+            $quote->setCustomerIsGuest(true);
             $quote->setCustomerGroupId(GroupInterface::NOT_LOGGED_IN_ID);
             $quote->setCheckoutMethod(CartManagementInterface::METHOD_GUEST);
             return $quote;
@@ -92,13 +93,13 @@ class CustomerHandler
             $customer->setFirstname($this->validateName($orderData['delivery_address']['first_name']));
             $customer->setLastname($this->validateName($orderData['delivery_address']['surname']));
             $customer->setEmail($email);
-            $customer->setGroupId($this->configProvider->customerGroupForOrderImport((int)$storeId));
+            $customer->setGroupId((int)$this->configProvider->customerGroupForOrderImport((int)$storeId));
             $this->customerRepository->save($customer);
             $customer = $this->customerRepository->get($email, $websiteId);
         }
 
         $quote->assignCustomer($customer);
-        $quote->setCustomerIsGuest(0);
+        $quote->setCustomerIsGuest(false);
 
         return $quote;
     }

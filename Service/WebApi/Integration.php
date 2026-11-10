@@ -9,6 +9,7 @@ namespace WebshopNL\Connect\Service\WebApi;
 
 use Magento\Framework\Exception\IntegrationException;
 use Magento\Framework\Exception\LocalizedException;
+use Magento\Integration\Model\Oauth\Token;
 use Magento\Integration\Api\AuthorizationServiceInterface;
 use Magento\Integration\Api\IntegrationServiceInterface;
 use Magento\Integration\Api\OauthServiceInterface;
@@ -62,8 +63,7 @@ class Integration
     {
         $integration = $this->integrationService->findByName(self::INTEGRATION_NAME);
         if ($integration->getId()) {
-            $customerId = $integration->getConsumerId();
-            return $this->oauthService->getAccessToken($customerId)->getToken();
+            return $this->accessToken((int)$integration->getConsumerId());
         }
 
         $integrationData = [
@@ -79,7 +79,25 @@ class Integration
         $this->authorizationService->grantPermissions($integrationId, ['WebshopNL_Connect::webapi']);
 
         $this->oauthService->createAccessToken($customerId, true);
-        return $this->oauthService->getAccessToken($customerId)->getToken();
+
+        return $this->accessToken((int)$customerId);
+    }
+
+    /**
+     * The consumer's access token.
+     *
+     * @param int $consumerId
+     * @return string
+     * @throws LocalizedException when the consumer has none
+     */
+    private function accessToken(int $consumerId): string
+    {
+        $token = $this->oauthService->getAccessToken($consumerId);
+        if (!$token instanceof Token) {
+            throw new LocalizedException(__('The WebshopNL integration has no access token.'));
+        }
+
+        return (string)$token->getToken();
     }
 
     /**
@@ -89,8 +107,7 @@ class Integration
     {
         $integration = $this->integrationService->findByName(self::INTEGRATION_NAME);
         if ($integration->getId()) {
-            $customerId = $integration->getConsumerId();
-            return $this->oauthService->getAccessToken($customerId)->getToken();
+            return $this->accessToken((int)$integration->getConsumerId());
         }
     }
 }

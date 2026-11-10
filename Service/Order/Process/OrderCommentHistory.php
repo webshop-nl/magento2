@@ -58,10 +58,10 @@ class OrderCommentHistory
 
         /** @var OrderStatusHistoryInterface $history */
         $history = $this->historyFactory->create();
-        $history->setParentId($order->getEntityId())
-            ->setComment($message)
-            ->setStatus($order->getStatus())
-            ->setIsCustomerNotified($isCustomerNotified)
+        $history->setParentId((int)$order->getEntityId())
+            ->setComment((string)$message)
+            ->setStatus((string)$order->getStatus())
+            ->setIsCustomerNotified((int)$isCustomerNotified)
             ->setEntityName('order');
         $this->historyRepository->save($history);
     }

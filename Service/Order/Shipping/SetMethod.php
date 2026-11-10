@@ -97,7 +97,12 @@ class SetMethod
             $shippingAddress = $quote->getShippingAddress();
             $billingAddress = $quote->getBillingAddress();
             $taxRateId = $this->configProvider->getTaxClassShipping((int)$store->getId());
-            $request = $this->taxCalculation->getRateRequest($shippingAddress, $billingAddress, null, $store);
+            $request = $this->taxCalculation->getRateRequest(
+                $shippingAddress,
+                $billingAddress,
+                null,
+                (int)$store->getId()
+            );
             $percent = $this->taxCalculation->getRate($request->setData('product_tax_class_id', $taxRateId));
             $shippingPriceCal = ($orderData['shipping_method']['cost'] / (100 + $percent) * 100);
         }
@@ -119,8 +124,8 @@ class SetMethod
         int $itemCount,
         float $price
     ): string {
-        $shippingMethod = $this->configProvider->getDefaultShippingMethod((int)$store->getId());
-        $shippingMethodFallback = $this->configProvider->getFallbackShippingMethod((int)$store->getId());
+        $shippingMethod = (string)$this->configProvider->getDefaultShippingMethod((int)$store->getId());
+        $shippingMethodFallback = (string)$this->configProvider->getFallbackShippingMethod((int)$store->getId());
 
         $destCountryId = $quote->getShippingAddress()->getCountryId();
         $destPostcode = $quote->getShippingAddress()->getPostcode();
