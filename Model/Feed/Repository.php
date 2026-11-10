@@ -196,7 +196,8 @@ class Repository implements FeedRepository
             }
         }
         foreach ($storeIds as $storeId) {
-            $result = $this->generateAndSaveFeed($storeId, 'CLI');
+            // --store-id arrives as a string from the console; this class declares strict types.
+            $result = $this->generateAndSaveFeed((int)$storeId, 'CLI');
             if ($result['success']) {
                 $output->writeln(sprintf('<info>%s</info>', $result['message']));
             } else {
