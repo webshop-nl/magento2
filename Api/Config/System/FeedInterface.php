@@ -48,18 +48,18 @@ interface FeedInterface
     public const XML_PATH_CONFIGURABLE = 'webshopnl/feed/configurable';
     public const XML_PATH_CONFIGURABLE_LINK = 'webshopnl/feed/configurable_link';
     public const XML_PATH_CONFIGURABLE_IMAGE = 'webshopnl/feed/configurable_image';
-    public const XML_PATH_CONFIGURABLE_PARENT_ATTRIBUTES = 'webshopnl/feed/configurable_parent_attributes';
+    public const XML_PATH_CONFIGURABLE_PARENT_ATTRIBUTES = 'webshopnl/feed/configurable_parent_atts';
     public const XML_PATH_CONFIGURABLE_NON_VISIBLE = 'webshopnl/feed/configurable_non_visible';
     public const XML_PATH_BUNDLE = 'webshopnl/feed/bundle';
     public const XML_PATH_BUNDLE_LINK = 'webshopnl/feed/bundle_link';
     public const XML_PATH_BUNDLE_IMAGE = 'webshopnl/feed/bundle_image';
-    public const XML_PATH_BUNDLE_PARENT_ATTRIBUTES = 'webshopnl/feed/bundle_parent_attributes';
+    public const XML_PATH_BUNDLE_PARENT_ATTRIBUTES = 'webshopnl/feed/bundle_parent_atts';
     public const XML_PATH_BUNDLE_NON_VISIBLE = 'webshopnl/feed/bundle_non_visible';
     public const XML_PATH_GROUPED = 'webshopnl/feed/grouped';
     public const XML_PATH_GROUPED_LINK = 'webshopnl/feed/grouped_link';
     public const XML_PATH_GROUPED_IMAGE = 'webshopnl/feed/grouped_image';
     public const XML_PATH_GROUPED_PARENT_PRICE = 'webshopnl/feed/grouped_parent_price';
-    public const XML_PATH_GROUPED_PARENT_ATTRIBUTES = 'webshopnl/feed/grouped_parent_attributes';
+    public const XML_PATH_GROUPED_PARENT_ATTRIBUTES = 'webshopnl/feed/grouped_parent_atts';
     public const XML_PATH_GROUPED_NON_VISIBLE = 'webshopnl/feed/grouped_non_visible';
 
     /** Additional Configuration Group */

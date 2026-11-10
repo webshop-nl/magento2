@@ -390,6 +390,7 @@
                showInWebsite="1"
                showInStore="1">
             <label>Use Parent URL for Simples</label>
+            <config_path>webshopnl/feed/grouped_link</config_path>
             <source_model>WebshopNL\Connect\Model\Config\System\Source\Grouped\Link</source_model>
             <depends>
                 <field id="grouped" separator=",">simple,both</field>
