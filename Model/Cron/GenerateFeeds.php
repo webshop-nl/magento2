@@ -38,7 +38,7 @@ class GenerateFeeds
     }
 
     /**
-     * Execute: Run all TradeTracker Feed generation.
+     * Execute: Run the feed generation for every enabled store view.
      */
     public function execute()
     {

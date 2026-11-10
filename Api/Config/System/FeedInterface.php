@@ -17,7 +17,7 @@ interface FeedInterface
     public const XPATH_FEED_ENABLED = 'webshopnl/feed/enable';
     public const XPATH_FEED_FILENAME = 'webshopnl/feed/filename';
     public const XPATH_FEED_RESULT = 'webshopnl/feeds/results';
-    public const XPATH_CRON_FREQUENCY = 'webshopnl/feeds/cron_frequency';
+    public const XPATH_CRON_FREQUENCY = 'webshopnl/feed/cron_frequency';
 
     /** Product Data Group */
     public const XML_PATH_NAME_SOURCE = 'webshopnl/feed/name_attribute';
