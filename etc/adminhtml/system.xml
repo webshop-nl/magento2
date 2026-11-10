@@ -22,13 +22,13 @@
         <section id="feed" translate="label comment" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="1">
             <label>Product Catalogue</label>
             <tab>webshopnl</tab>
-            <resource>WebshopNL_Connect::feed</resource>
+            <resource>WebshopNL_Connect::config</resource>
             <include path="WebshopNL_Connect::system/feed.xml"/>
         </section>
         <section id="order" translate="label comment" type="text" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="1">
             <label>Orders</label>
             <tab>webshopnl</tab>
-            <resource>WebshopNL_Connect::order</resource>
+            <resource>WebshopNL_Connect::config</resource>
             <include path="WebshopNL_Connect::system/order.xml"/>
         </section>
     </system>
