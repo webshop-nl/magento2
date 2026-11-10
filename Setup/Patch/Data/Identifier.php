@@ -51,7 +51,7 @@ class Identifier implements DataPatchInterface
     /**
      * @inheritDoc
      */
-    public function apply()
+    public function apply(): self
     {
         try {
             $this->configWriter->save(

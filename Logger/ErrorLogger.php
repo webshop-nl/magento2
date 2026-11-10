@@ -36,7 +36,8 @@ class ErrorLogger extends Logger
         array $processors = []
     ) {
         $this->json = $json;
-        parent::__construct($name, $handlers, $processors);
+        // Monolog 3 types both as lists; di.xml hands over associative arrays keyed by handler name.
+        parent::__construct($name, array_values($handlers), array_values($processors));
     }
 
     /**
@@ -49,7 +50,8 @@ class ErrorLogger extends Logger
     public function addLog($type, $data)
     {
         if (is_array($data) || is_object($data)) {
-            $this->addRecord(static::ERROR, $type . ': ' . $this->json->serialize($data));
+            $payload = $this->json->serialize(is_object($data) ? (array)$data : $data);
+            $this->addRecord(static::ERROR, $type . ': ' . $payload);
         } else {
             $this->addRecord(static::ERROR, $type . ': ' . $data);
         }

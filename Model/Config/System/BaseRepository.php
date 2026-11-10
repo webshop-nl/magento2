@@ -12,6 +12,7 @@ use Magento\Config\Model\ResourceModel\Config as ConfigData;
 use Magento\Config\Model\ResourceModel\Config\Data\CollectionFactory as ConfigDataCollectionFactory;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\ProductMetadataInterface;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Model\ScopeInterface;
@@ -83,7 +84,7 @@ class BaseRepository
      *
      * @return bool
      */
-    protected function isSetFlag(string $path, int $storeId = null, string $scope = null): bool
+    protected function isSetFlag(string $path, ?int $storeId = null, ?string $scope = null): bool
     {
         if (empty($scope)) {
             $scope = ScopeInterface::SCOPE_STORE;
@@ -99,7 +100,7 @@ class BaseRepository
      * @param $storeId
      * @return StoreInterface
      */
-    public function getStore($storeId = null): StoreInterface
+    public function getStore(?int $storeId = null): StoreInterface
     {
         try {
             return $this->storeManager->getStore($storeId);
@@ -109,7 +110,12 @@ class BaseRepository
             }
         }
         $stores = $this->storeManager->getStores();
-        return reset($stores);
+        $store = reset($stores);
+        if ($store === false) {
+            throw new NoSuchEntityException(__('No store view is available.'));
+        }
+
+        return $store;
     }
 
     /**
@@ -121,7 +127,7 @@ class BaseRepository
      *
      * @return array
      */
-    protected function getStoreValueArray(string $path, int $storeId = null, string $scope = null): array
+    protected function getStoreValueArray(string $path, ?int $storeId = null, ?string $scope = null): array
     {
         $value = $this->getStoreValue($path, (int)$storeId, $scope);
 
@@ -130,10 +136,12 @@ class BaseRepository
         }
 
         try {
-            return $this->json->unserialize($value);
+            $data = $this->json->unserialize($value);
         } catch (\Exception $e) {
             return [];
         }
+
+        return is_array($data) ? $data : [];
     }
 
     /**
@@ -147,8 +155,8 @@ class BaseRepository
      */
     protected function getStoreValue(
         string $path,
-        int $storeId = null,
-        string $scope = null
+        ?int $storeId = null,
+        ?string $scope = null
     ): string {
         if (!$storeId) {
             $storeId = (int)$this->getStore()->getId();
@@ -165,7 +173,7 @@ class BaseRepository
      *
      * @return string
      */
-    protected function getUncachedStoreValue(string $path, int $storeId = null): string
+    protected function getUncachedStoreValue(string $path, ?int $storeId = null): string
     {
         $collection = $this->configDataCollectionFactory->create()
             ->addFieldToSelect('value')
@@ -191,7 +199,7 @@ class BaseRepository
      * @param string $key
      * @param int|null $storeId
      */
-    protected function setConfigData(string $value, string $key, int $storeId = null): void
+    protected function setConfigData(string $value, string $key, ?int $storeId = null): void
     {
         if ($storeId) {
             $this->config->saveConfig($key, $value, 'stores', $storeId);

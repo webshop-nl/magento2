@@ -82,6 +82,6 @@ class Create
     private function escapeJsonValue($value): string
     {
         $encoded = json_encode((string)$value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-        return substr($encoded, 1, -1);
+        return substr((string)$encoded, 1, -1);
     }
 }

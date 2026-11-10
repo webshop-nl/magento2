@@ -15,6 +15,7 @@ use Magento\Framework\Filesystem\Driver\File;
 use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
+use Magento\Sales\Model\Order as OrderModel;
 use Magento\Sales\Api\OrderRepositoryInterface as MagentoOrderRepository;
 use WebshopNL\Connect\Api\Config\RepositoryInterface as ConfigRepository;
 use WebshopNL\Connect\Api\Config\System\OrderInterface as OrderInterfaceAlias;
@@ -149,7 +150,7 @@ class Order implements OrderInterface
                     [
                         'module_version' => $this->configRepository->getExtensionVersion(),
                         'order_id' => $orderData['order_id'],
-                        'remote_order_id' => $order->getId(),
+                        'remote_order_id' => $order->getEntityId(),
                         'merchant_id' => $orderData['merchant_id'],
                         'status' => "CONFIRMED",
                         'message' => 'Order was imported'
@@ -229,6 +230,17 @@ class Order implements OrderInterface
             );
         }
 
+        // The shipment lookup below is on the order model; the repository is declared to hand back
+        // the interface, which knows neither hasShipments() nor getShipmentsCollection().
+        if (!$order instanceof OrderModel) {
+            $errorMessage = sprintf(self::NO_ORDER_EXIST_EXCEPTION, $orderId);
+            throw new WebapiException(
+                __($errorMessage),
+                0,
+                WebapiException::HTTP_BAD_REQUEST
+            );
+        }
+
         return [
             [
                 'module_version' => $this->configRepository->getExtensionVersion(),
@@ -241,13 +253,19 @@ class Order implements OrderInterface
     }
 
     /**
-     * @param \Magento\Sales\Api\Data\OrderInterface $order
+     * @param OrderModel $order
      * @return array
      */
-    private function getDeliveryData(\Magento\Sales\Api\Data\OrderInterface $order)
+    private function getDeliveryData(OrderModel $order)
     {
         $deliveryData = [];
-        foreach ($order->getShipmentsCollection() as $shipment) {
+        // The collection is false for an order that was never saved.
+        $shipments = $order->getShipmentsCollection();
+        if ($shipments === false) {
+            return $deliveryData;
+        }
+
+        foreach ($shipments as $shipment) {
             /** @var \Magento\Sales\Api\Data\TrackInterface $track */
             foreach ($shipment->getTracksCollection()->getItems() as $track) {
                 $deliveryData[] = [

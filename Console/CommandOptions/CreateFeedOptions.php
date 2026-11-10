@@ -32,7 +32,7 @@ class CreateFeedOptions extends OptionKeys
      * Basic options
      *
      * @return array
-     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+     * @SuppressWarnings("PHPMD.ExcessiveMethodLength")
      */
     private function getBasicOptions(): array
     {

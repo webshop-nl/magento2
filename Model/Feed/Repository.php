@@ -142,7 +142,7 @@ class Repository implements FeedRepository
     /**
      * @inheritDoc
      */
-    public function getFeedLocation(int $storeId = null, $type = null): array
+    public function getFeedLocation(?int $storeId = null, ?string $type = null): array
     {
         $filename = $this->configRepository->getFilename((int)$storeId);
         if ($type == 'preview') {

@@ -51,7 +51,7 @@ interface RepositoryInterface extends System\OrderInterface
      *
      * @return bool
      */
-    public function isEnabled(int $storeId = null): bool;
+    public function isEnabled(?int $storeId = null): bool;
 
     /**
      * Get mode.
@@ -67,7 +67,7 @@ interface RepositoryInterface extends System\OrderInterface
      *
      * @return bool
      */
-    public function isDebugMode(int $storeId = null): bool;
+    public function isDebugMode(?int $storeId = null): bool;
 
     /**
      * Get store
@@ -75,7 +75,7 @@ interface RepositoryInterface extends System\OrderInterface
      * @param null $storeId
      * @return StoreInterface
      */
-    public function getStore($storeId = null): StoreInterface;
+    public function getStore(?int $storeId = null): StoreInterface;
 
     /**
      * Support link for extension.

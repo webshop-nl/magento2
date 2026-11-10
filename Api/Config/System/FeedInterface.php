@@ -84,7 +84,7 @@ interface FeedInterface
      *
      * @return bool
      */
-    public function isFeedEnabled(int $storeId = null): bool;
+    public function isFeedEnabled(?int $storeId = null): bool;
 
     /**
      * Return all enabled storeIds
@@ -232,5 +232,5 @@ interface FeedInterface
      * @param int|null $storeId
      * @return string
      */
-    public function getFileName(int $storeId = null): string;
+    public function getFileName(?int $storeId = null): string;
 }

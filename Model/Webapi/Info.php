@@ -33,7 +33,7 @@ class Info implements InfoInterface
     /**
      * @var string
      */
-    private $storeUrl = '';
+    private ?string $storeUrl = null;
 
     /**
      * Info constructor.

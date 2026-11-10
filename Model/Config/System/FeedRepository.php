@@ -40,7 +40,7 @@ class FeedRepository extends BaseRepository implements FeedInterface
     /**
      * @inheritDoc
      */
-    public function isFeedEnabled(int $storeId = null): bool
+    public function isFeedEnabled(?int $storeId = null): bool
     {
         return $this->isSetFlag(self::XPATH_FEED_ENABLED, $storeId);
     }
@@ -204,7 +204,7 @@ class FeedRepository extends BaseRepository implements FeedInterface
     /**
      * @inheritDoc
      */
-    public function getCategoryAttribute(int $storeId = null): ?string
+    private function getCategoryAttribute(?int $storeId = null): string
     {
         return $this->getStoreValue(self::XPATH_CATEGORY_ATTRIBUTE, $storeId);
     }
@@ -374,7 +374,7 @@ class FeedRepository extends BaseRepository implements FeedInterface
      *
      * @return bool
      */
-    public function isVatPctEnabled(int $storeId): bool
+    private function isVatPctEnabled(int $storeId): bool
     {
         return $this->isSetFlag(self::XPATH_VAT_PCT_ENABLED, $storeId);
     }
@@ -495,11 +495,7 @@ class FeedRepository extends BaseRepository implements FeedInterface
     }
 
     /**
-     * Exclude of out of stock products
-     *
-     * @param int $storeId
-     *
-     * @return bool
+     * @inheritDoc
      */
     public function getBatchSize(): int
     {
@@ -515,7 +511,11 @@ class FeedRepository extends BaseRepository implements FeedInterface
     }
 
     /**
-     * @inheritDoc
+     * Exclude out of stock products
+     *
+     * @param int $storeId
+     *
+     * @return bool
      */
     public function excludeOutOfStock(int $storeId): bool
     {
@@ -529,7 +529,7 @@ class FeedRepository extends BaseRepository implements FeedInterface
      *
      * @return array
      */
-    public function getAdvancedFiltersData(int $storeId): array
+    private function getAdvancedFiltersData(int $storeId): array
     {
         if (!$this->isSetFlag(self::XML_PATH_FILTERS, $storeId)) {
             return [];
@@ -714,7 +714,7 @@ class FeedRepository extends BaseRepository implements FeedInterface
      * @return string
      * @see \WebshopNL\Connect\Model\Config\System\Source\Grouped\Options
      */
-    public function groupedProductLogic(int $storeId): string
+    private function groupedProductLogic(int $storeId): string
     {
         return $this->getStoreValue(self::XML_PATH_GROUPED, $storeId);
     }
@@ -726,7 +726,7 @@ class FeedRepository extends BaseRepository implements FeedInterface
      *
      * @return string
      */
-    public function groupedProductUrl(int $storeId): string
+    private function groupedProductUrl(int $storeId): string
     {
         return $this->getStoreValue(self::XML_PATH_GROUPED_LINK, $storeId);
     }
@@ -739,7 +739,7 @@ class FeedRepository extends BaseRepository implements FeedInterface
      * @return int
      * @see \WebshopNL\Connect\Model\Config\System\Source\Grouped\Image
      */
-    public function groupedProductImage(int $storeId): int
+    private function groupedProductImage(int $storeId): int
     {
         return (int)$this->getStoreValue(self::XML_PATH_GROUPED_IMAGE, $storeId);
     }
@@ -751,7 +751,7 @@ class FeedRepository extends BaseRepository implements FeedInterface
      *
      * @return array
      */
-    public function groupedParentAttributes(int $storeId): array
+    private function groupedParentAttributes(int $storeId): array
     {
         $attributes = $this->getStoreValue(self::XML_PATH_GROUPED_PARENT_ATTRIBUTES, $storeId);
         return $attributes ? explode(',', $attributes) : [];
@@ -764,7 +764,7 @@ class FeedRepository extends BaseRepository implements FeedInterface
      *
      * @return bool
      */
-    public function groupedNonVisibleFallback(int $storeId): bool
+    private function groupedNonVisibleFallback(int $storeId): bool
     {
         return $this->isSetFlag(self::XML_PATH_GROUPED_NON_VISIBLE, $storeId);
     }
@@ -800,7 +800,7 @@ class FeedRepository extends BaseRepository implements FeedInterface
     /**
      * @inheritDoc
      */
-    public function getFileName(int $storeId = null): string
+    public function getFileName(?int $storeId = null): string
     {
         $filename = $this->getStoreValue(self::XPATH_FEED_FILENAME, $storeId);
 
