@@ -19,6 +19,9 @@
                 <enable>0</enable>
                 <filename>webshop.ndjson</filename>
                 <cron_frequency>0 0 * * *</cron_frequency>
+                <configurable>both</configurable>
+                <bundle>both</bundle>
+                <grouped>both</grouped>
                 <name_attribute>name</name_attribute>
                 <description_attribute>short_description</description_attribute>
                 <description_long_attribute>description</description_long_attribute>

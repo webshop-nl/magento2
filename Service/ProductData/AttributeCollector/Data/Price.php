@@ -14,10 +14,12 @@ use Magento\Catalog\Model\Product\CatalogPrice;
 use Magento\Catalog\Model\ResourceModel\Product\Collection;
 use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory;
 use Magento\CatalogRule\Model\ResourceModel\RuleFactory;
+use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
 use Magento\Framework\Data\Collection\AbstractDb;
 use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
 use Magento\GroupedProduct\Model\Product\Type\Grouped;
-use Magento\Store\Model\StoreManagerInterface;
+use Magento\Store\Api\Data\StoreInterface;
+use Magento\Store\Model\Store;
 
 /**
  * Service class for price data
@@ -28,118 +30,103 @@ class Price
     public const REQUIRE = [
         'products',
         'grouped_price_type',
-        'bundle_price_type'
+        'bundle_price_type',
+        'configurable_price_type'
     ];
 
     /**
-     * @var CatalogPrice
+     * The price columns come out of the index as numeric strings as often as floats; they are cast
+     * where they are read, so everything downstream can count on a float.
      */
-    private $commonPriceModel;
-    /**
-     * @var RuleFactory
-     */
-    private $resourceRuleFactory;
-    /**
-     * @var CatalogHelper
-     */
-    private $catalogHelper;
-    /**
-     * @var StoreManagerInterface
-     */
-    private $storeManager;
-    /**
-     * @var TimezoneInterface
-     */
-    private $localeDate;
-    /**
-     * @var Collection
-     */
-    private $collectionFactory;
+    private ?float $price = null;
 
-    private $price = null;
-    private $finalPrice = null;
-    private $specialPrice = null;
-    private $salesPrice = null;
+    private ?float $finalPrice = null;
+
+    private ?float $specialPrice = null;
+
+    private ?float $salesPrice = null;
+
+    /** @var float|false|null getRulePrice() answers false when no catalog rule applies */
     private $rulePrice = null;
-    private $minPrice = null;
-    private $maxPrice = null;
-    private $totalPrice = null;
-    private $websiteId = null;
-    private $taxClasses = [];
-    private $bundlePriceType = null;
-    private $groupedPriceType = null;
-    private $products = null;
 
-    /**
-     * @param CatalogPrice $commonPriceModel
-     * @param RuleFactory $resourceRuleFactory
-     * @param CatalogHelper $catalogHelper
-     * @param StoreManagerInterface $storeManager
-     * @param TimezoneInterface $localeDate
-     * @param CollectionFactory $collectionFactory
-     * @throws Exception
-     */
+    private ?float $minPrice = null;
+
+    private ?float $maxPrice = null;
+
+    private ?float $totalPrice = null;
+
+    private ?int $websiteId = null;
+
+    private ?string $currecy = null;
+
+    /** @var array<int|string, float> */
+    private array $taxClasses = [];
+
+    private ?string $bundlePriceType = null;
+
+    private ?string $groupedPriceType = null;
+
+    private ?string $configurablePriceType = null;
+
+    private ?Collection $products = null;
+
     public function __construct(
-        CatalogPrice $commonPriceModel,
-        RuleFactory $resourceRuleFactory,
-        CatalogHelper $catalogHelper,
-        StoreManagerInterface $storeManager,
-        TimezoneInterface $localeDate,
-        CollectionFactory $collectionFactory
+        private readonly CatalogPrice $commonPriceModel,
+        private readonly RuleFactory $resourceRuleFactory,
+        private readonly CatalogHelper $catalogHelper,
+        private readonly TimezoneInterface $localeDate,
+        private readonly CollectionFactory $collectionFactory
     ) {
-        $this->commonPriceModel = $commonPriceModel;
-        $this->resourceRuleFactory = $resourceRuleFactory;
-        $this->catalogHelper = $catalogHelper;
-        $this->storeManager = $storeManager;
-        $this->localeDate = $localeDate;
-        $this->collectionFactory = $collectionFactory->create();
     }
 
     /**
      * @param array $productIds
-     *
+     * @param StoreInterface $store
      * @param string $groupedPriceType options: min, max, total
      * @param string $bundlePriceType options: min, max, total
-     * @param int $storeId
+     * @param string $configurablePriceType options: min, max
      * @return array
      */
     public function execute(
-        array $productIds = [],
+        array $productIds,
+        StoreInterface $store,
         string $groupedPriceType = '',
         string $bundlePriceType = '',
-        int $storeId = 0
+        string $configurablePriceType = ''
     ): array {
-        $this->websiteId = $this->getWebsiteId((int)$storeId);
-        $this->setData('products', $this->getProductData($productIds));
-        $this->setData('grouped_price_type', $groupedPriceType);
-        $this->setData('bundle_price_type', $bundlePriceType);
+        $this->currecy = $store->getDefaultCurrencyCode();
+        $this->websiteId = (int)$store->getWebsiteId();
+        $this->taxClasses = [];
+        $this->products = $this->getProductData($productIds, (int)$store->getId());
+        $this->groupedPriceType = $groupedPriceType;
+        $this->bundlePriceType = $bundlePriceType;
+        $this->configurablePriceType = $configurablePriceType;
+        // Fallback to 1 when no exchange rate is set, otherwise every price becomes 0.
+        $rate = $store->getBaseCurrency()->getRate($this->currecy) ?: 1;
 
         foreach ($this->products as $product) {
+            // Every price lives in a property of this class, and the per-type setters return early
+            // when a product has no price to resolve (an unsalable configurable, for one). Without
+            // this reset those properties still hold the previous product's figures, so such a
+            // product was published with the price of whichever product came before it in the batch.
+            $this->resetPrices();
             $this->setPrices($product, $this->groupedPriceType, $this->bundlePriceType);
-            if (array_key_exists($product->getTaxClassId(), $this->taxClasses)) {
-                $percent = $this->taxClasses[$product->getTaxClassId()];
-            } else {
-                $priceInclTax = $this->processPrice($product, (float)$this->price);
-                if ($this->price == 0) {
-                    $percent = 1;
-                } else {
-                    $percent = $priceInclTax / $this->price;
-                }
-                $this->taxClasses[$product->getTaxClassId()] = $percent;
-            }
+            $percent = $this->getPercentage($product, $store);
+
             $result[$product->getId()] = [
-                'price' => $percent * $this->price,
-                'price_ex' => $percent * $this->price,
-                'final_price' => $percent * $this->finalPrice,
-                'final_price_ex' => $percent * $this->finalPrice,
-                'sales_price' => $percent * $this->salesPrice,
-                'min_price' => $percent * $this->minPrice,
-                'max_price' => $percent * $this->maxPrice,
-                'special_price' => $percent * $this->specialPrice,
-                'total_price' => $percent * $this->totalPrice,
+                'price' => $this->round($percent * $this->price),
+                'price_ex' => $this->round($this->price * $rate),
+                'final_price' => $this->round($this->finalPrice ? $percent * $this->finalPrice : null),
+                'final_price_ex' => $this->round($this->finalPrice * $rate),
+                'sales_price' => $this->round($this->salesPrice ? $percent * $this->salesPrice : null),
+                'min_price' => $this->round($this->minPrice ? $percent * $this->minPrice : null),
+                'max_price' => $this->round($this->maxPrice ? $percent * $this->maxPrice : null),
+                'special_price' => $this->round($this->specialPrice ? $percent * $this->specialPrice : null),
+                'total_price' => $this->round($this->totalPrice ? $percent * $this->totalPrice : null),
                 'sales_date_range' => $this->getSpecialPriceDateRang($product),
                 'discount_perc' => $this->getDiscountPercentage(),
-                'tax' => abs(1 - $percent) * 100
+                'tax' => abs(1 - ($percent / $rate)) * 100,
+                'currency' => $this->currecy
             ];
         }
 
@@ -147,50 +134,36 @@ class Price
     }
 
     /**
-     * @param int $storeId
-     * @return int
+     * Clear the per-product price state, so nothing carries over from the previous product.
      */
-    private function getWebsiteId(int $storeId = 0): int
+    private function resetPrices(): void
     {
-        try {
-            return (int)$this->storeManager->getStore($storeId)->getWebsiteId();
-        } catch (Exception $exception) {
-            return 0;
-        }
-    }
-
-    /**
-     * @param string $type
-     * @param mixed $data
-     */
-    public function setData($type, $data)
-    {
-        if (!$data) {
-            return;
-        }
-        switch ($type) {
-            case 'products':
-                $this->products = $data;
-                break;
-            case 'grouped_price_type':
-                $this->groupedPriceType = $data;
-                break;
-            case 'bundle_price_type':
-                $this->bundlePriceType = $data;
-                break;
-        }
+        $this->price = null;
+        $this->finalPrice = null;
+        $this->specialPrice = null;
+        $this->salesPrice = null;
+        $this->rulePrice = null;
+        $this->minPrice = null;
+        $this->maxPrice = null;
+        $this->totalPrice = null;
     }
 
     /**
      * @param array $productIds
-     * @return Collection|AbstractDb
+     * @param int $storeId
+     * @return Collection
      */
-    private function getProductData(array $productIds = [])
+    private function getProductData(array $productIds = [], int $storeId = 0)
     {
-        $products = $this->collectionFactory
-            ->addFieldToSelect(['price', 'special_price'])
-            ->addFieldToFilter('entity_id', ['in' => $productIds]);
+        // Step by step rather than chained: the collection's own methods are declared to return
+        // the abstract parent, which does not know addStoreFilter().
+        $products = $this->collectionFactory->create();
+        $products->addFieldToSelect(['price', 'special_price', 'tax_class_id', 'special_from_date', 'special_to_date']);
+        $products->addFieldToFilter('entity_id', ['in' => $productIds]);
+        $products->addStoreFilter($storeId);
+        $products->setStoreId($storeId);
 
+        // Join the price attributes
         $products->getSelect()->joinLeft(
             ['price_index' => $products->getTable('catalog_product_index_price')],
             join(
@@ -201,7 +174,7 @@ class Price
                     'price_index.customer_group_id = 0'
                 ]
             ),
-            ['final_price', 'min_price', 'max_price']
+            ['final_price', 'min_price', 'max_price', 'price']
         );
 
         return $products;
@@ -216,7 +189,7 @@ class Price
     {
         switch ($product->getTypeId()) {
             case 'configurable':
-                $this->setConfigurablePrices($product);
+                $this->setConfigurablePrices($product, $this->configurablePriceType);
                 break;
             case 'grouped':
                 $this->setGroupedPrices($product, $groupedPriceType);
@@ -228,6 +201,11 @@ class Price
                 $this->setSimplePrices($product);
                 break;
         }
+
+        $this->price = $this->round($this->price);
+        $this->finalPrice = $this->round($this->finalPrice);
+        $this->salesPrice = $this->round($this->salesPrice);
+        $this->minPrice = $this->round($this->minPrice);
 
         $this->rulePrice = $this->getRulePrice($product);
 
@@ -255,12 +233,17 @@ class Price
         if ($this->finalPrice === null && $this->price !== null) {
             $this->finalPrice = $this->price;
         }
+
+        if ($this->price == '0.0000' && $this->finalPrice > 0) {
+            $this->price = $this->finalPrice;
+        }
     }
 
     /**
      * @param Product $product
+     * @param string|null $configurablePriceType
      */
-    private function setConfigurablePrices(Product $product): void
+    private function setConfigurablePrices(Product $product, ?string $configurablePriceType = null): void
     {
         /**
          * Check if config has a final_price (data catalog_product_index_price)
@@ -270,11 +253,65 @@ class Price
             return;
         }
 
-        $this->price = $product->getData('price');
-        $this->finalPrice = $product->getData('final_price');
-        $this->specialPrice = $product->getData('special_price');
-        $this->minPrice = $product['min_price'] >= 0 ? $product['min_price'] : null;
-        $this->maxPrice = $product['max_price'] >= 0 ? $product['max_price'] : null;
+        $this->price = $this->toPrice($product->getData('price'));
+        $this->finalPrice = $this->toPrice($product->getData('final_price'));
+        $this->specialPrice = $this->toPrice($product->getData('special_price'));
+        $this->minPrice = $product['min_price'] >= 0 ? $this->toPrice($product['min_price']) : null;
+        $this->maxPrice = $product['max_price'] >= 0 ? $this->toPrice($product['max_price']) : null;
+
+        if ($configurablePriceType === 'min' && $this->minPrice !== null) {
+            $this->price = $this->minPrice;
+            $this->finalPrice = $this->minPrice;
+            return;
+        }
+
+        if ($configurablePriceType === 'max' && $this->maxPrice !== null) {
+            $this->price = $this->maxPrice;
+            $this->finalPrice = $this->maxPrice;
+            return;
+        }
+
+        // Without an explicit choice the parent takes the price a customer can actually pay for
+        // the cheapest variant, which is what the store page shows and what Magento's own price
+        // model resolves. Neither index column answers that on its own. min_price can sit below
+        // every variant: with a catalog price rule on a configurable, a 35.00 product indexes as
+        // final 28.00 and min 21.00 while all variants cost 28.00. final_price can sit above
+        // them: with the discount on the variants, the same product indexes as final 35.00 while
+        // the cheapest variant costs 28.00. Both cases published a price nothing sells for.
+        $variantPrice = $this->getCheapestVariantPrice($product);
+        if ($variantPrice !== null) {
+            $this->finalPrice = $variantPrice;
+        }
+    }
+
+    /**
+     * Cheapest final price among the variants a customer can buy, or null when a configurable has
+     * no salable variant at all.
+     *
+     * @param Product $product
+     * @return float|null
+     */
+    private function getCheapestVariantPrice(Product $product): ?float
+    {
+        $typeInstance = $product->getTypeInstance();
+        if (!$typeInstance instanceof Configurable) {
+            return null;
+        }
+
+        $cheapest = null;
+        /** @var Product $variant */
+        foreach ($typeInstance->getUsedProducts($product) as $variant) {
+            $variant->setWebsiteId($this->websiteId);
+            if (!$variant->isSalable()) {
+                continue;
+            }
+            $price = $this->toPrice($this->commonPriceModel->getCatalogPrice($variant));
+            if ($price !== null && ($cheapest === null || $price < $cheapest)) {
+                $cheapest = $price;
+            }
+        }
+
+        return $cheapest;
     }
 
     /**
@@ -287,7 +324,7 @@ class Price
         $maxPrice = null;
         $totalPrice = null;
 
-        /* @var $typeInstance Grouped */
+        /** @var Grouped $typeInstance */
         $typeInstance = $product->getTypeInstance();
         $subProducts = $typeInstance->getAssociatedProducts($product);
 
@@ -312,26 +349,24 @@ class Price
             }
         }
 
-        $this->minPrice = $minPrice;
-        $this->maxPrice = $maxPrice;
-        $this->totalPrice = $totalPrice;
+        $this->minPrice = $this->toPrice($product['min_price'] >= 0 ? $product['min_price'] : $minPrice);
+        $this->maxPrice = $this->toPrice($product['max_price'] >= 0 ? $product['max_price'] : $maxPrice);
+        $this->totalPrice = $this->toPrice($totalPrice);
 
         if ($groupedPriceType == 'max') {
-            $this->price = $maxPrice;
-            $this->finalPrice = $maxPrice;
-
+            $this->price = $this->maxPrice;
+            $this->finalPrice = $this->maxPrice;
             return;
         }
 
         if ($groupedPriceType == 'total') {
             $this->price = $totalPrice;
             $this->finalPrice = $totalPrice;
-
             return;
         }
 
-        $this->price = $minPrice;
-        $this->finalPrice = $minPrice;
+        $this->price = $this->minPrice;
+        $this->finalPrice = $this->minPrice;
     }
 
     /**
@@ -358,20 +393,42 @@ class Price
      */
     private function setSimplePrices(Product $product)
     {
-        $this->price = $product->getData('price') !== 0.0 ? $product->getData('price') : null;
-        $this->finalPrice = $product->getData('final_price') !== 0.0
-            ? $product->getData('final_price') : null;
+        $this->price = (float)$product->getData('price') !== 0.0
+            ? $this->toPrice($product->getData('price'))
+            : null;
+
+        $this->finalPrice = (float)$product->getData('final_price') !== 0.0
+            ? $this->toPrice($product->getData('final_price'))
+            : null;
+
         $this->specialPrice = $product->getData('special_price')
-            ? $product->getData('special_price') : 0;
-        $this->minPrice = $product['min_price'] >= 0 ? $product['min_price'] : null;
-        $this->maxPrice = $product['max_price'] >= 0 ? $product['max_price'] : null;
+            ? $this->toPrice($product->getData('special_price'))
+            : null;
+
+        $this->minPrice = $product['min_price'] >= 0 ? $this->toPrice($product['min_price']) : null;
+        $this->maxPrice = $product['max_price'] >= 0 ? $this->toPrice($product['max_price']) : null;
+    }
+
+    private function round($price)
+    {
+        return $price ? round((float)$price, 2) : null;
+    }
+
+    /**
+     * A price column as a float, or null when there is no value to speak of.
+     *
+     * @param mixed $value
+     * @return float|null
+     */
+    private function toPrice($value): ?float
+    {
+        return $value === null || $value === '' ? null : (float)$value;
     }
 
     /**
      * Get special rule price from product
      *
      * @param Product $product
-     *
      * @return float
      */
     private function getRulePrice(Product $product): float
@@ -379,8 +436,8 @@ class Price
         try {
             $this->rulePrice = $this->resourceRuleFactory->create()->getRulePrice(
                 $this->localeDate->scopeDate(),
-                $this->websiteId,
-                '',
+                (int)$this->websiteId,
+                0,
                 $product->getId()
             );
         } catch (Exception $exception) {
@@ -388,10 +445,49 @@ class Price
         }
 
         if ($this->rulePrice !== null && $this->rulePrice !== false) {
-            $this->finalPrice = min($this->finalPrice, $this->rulePrice);
+            // getRulePrice() answers with whatever the adapter returns, which is a numeric string.
+            $this->rulePrice = (float)$this->rulePrice;
+            $this->finalPrice = $this->finalPrice === null
+                ? $this->rulePrice
+                : min($this->finalPrice, $this->rulePrice);
         }
 
         return (float)$this->rulePrice;
+    }
+
+    /**
+     * Calculate price multiplier including tax adjustments and currency rate differences.
+     * Returns a float multiplier based on the processed price (incl. tax) and original price,
+     * potentially adjusted for base-to-store currency conversion.
+     *
+     * @param Product $product The product for which to calculate the price multiplier.
+     * @param StoreInterface $store The store context used to resolve tax and currency.
+     * @return float The price multiplier relative to base price.
+     */
+    private function getPercentage(Product $product, StoreInterface $store): float
+    {
+        if ($this->price == 0.0) {
+            return 0;
+        }
+
+        $taxClassId = (int)$product->getTaxClassId();
+        if (isset($this->taxClasses[$taxClassId])) {
+            return $this->taxClasses[$taxClassId];
+        }
+
+        $processed = $this->processPrice($product, (float)$this->price, $store);
+        $percent = round($processed / $this->price, 2);
+
+        // Adjust for currency difference
+        if ($store->getBaseCurrencyCode() !== $this->currecy) {
+            $rate = $store->getBaseCurrency()->getRate($this->currecy);
+            if ($rate > 0) {
+                $percent *= $rate;
+            }
+        }
+
+        $this->taxClasses[$taxClassId] = $percent;
+        return $percent;
     }
 
     /**
@@ -399,19 +495,29 @@ class Price
      *
      * @param Product $product
      * @param float $price inputted product price
-     *
+     * @param StoreInterface|null $store
      * @return float
      */
-    private function processPrice(Product $product, float $price): float
+    private function processPrice(Product $product, float $price, ?StoreInterface $store): float
     {
-        return (float)$this->catalogHelper->getTaxPrice($product, $price, true);
+        // The helper takes a Store or a store id, not the interface Magento hands us here.
+        $storeArg = $store instanceof Store ? $store : ($store !== null ? (int)$store->getId() : null);
+
+        return (float)$this->catalogHelper->getTaxPrice(
+            $product,
+            $price,
+            true,
+            null,
+            null,
+            null,
+            $storeArg
+        );
     }
 
     /**
      * Get product special price data range
      *
      * @param Product $product
-     *
      * @return string
      */
     private function getSpecialPriceDateRang(Product $product): string
@@ -420,13 +526,9 @@ class Price
             return '';
         }
 
-        if ($this->specialPrice != $this->finalPrice) {
-            return '';
-        }
-
         if ($product->getSpecialFromDate() && $product->getSpecialToDate()) {
-            $from = date('Y-m-d', strtotime($product->getSpecialFromDate()));
-            $to = date('Y-m-d', strtotime($product->getSpecialToDate()));
+            $from = date('Y-m-d\TH:i:s', strtotime($product->getSpecialFromDate()));
+            $to = date('Y-m-d\T23:59:59', strtotime($product->getSpecialToDate())); // Fix ending time
             return $from . '/' . $to;
         }
 
@@ -448,36 +550,5 @@ class Price
             }
         }
         return '0%';
-    }
-
-    /**
-     * @return string[]
-     */
-    public function getRequiredParameters(): array
-    {
-        return self::REQUIRE;
-    }
-
-    /**
-     * @param string $type
-     */
-    public function resetData(string $type = 'all')
-    {
-        if ($type == 'all') {
-            unset($this->products);
-            unset($this->groupedPriceType);
-            unset($this->bundlePriceType);
-        }
-        switch ($type) {
-            case 'products':
-                unset($this->products);
-                break;
-            case 'grouped_price_type':
-                unset($this->groupedPriceType);
-                break;
-            case 'bundle_price_type':
-                unset($this->bundlePriceType);
-                break;
-        }
     }
 }

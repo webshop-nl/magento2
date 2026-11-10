@@ -205,6 +205,28 @@ interface FeedInterface
     public function setFeedGenerationResult(int $storeId, string $msg): void;
 
     /**
+     * Whether a product that is out of stock stays out of the feed
+     *
+     * @param int $storeId
+     * @return bool
+     */
+    public function excludeOutOfStock(int $storeId): bool;
+
+    /**
+     * How many products one collector run handles at a time
+     *
+     * @return int
+     */
+    public function getBatchSize(): int;
+
+    /**
+     * How many products a preview shows
+     *
+     * @return int
+     */
+    public function getPreviewSize(): int;
+
+    /**
      * Get filename of feed
      *
      * @param int|null $storeId

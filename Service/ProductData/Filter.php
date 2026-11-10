@@ -15,39 +15,17 @@ use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\EntityManager\MetadataPool;
 use Magento\Store\Model\StoreManagerInterface;
 
-/**
- * Filter class
- */
 class Filter
 {
+    private string $entityId;
+    private ?int $statusAttributeId = null;
+    private ?int $visibilityAttributeId = null;
 
-    /**
-     * @var ResourceConnection
-     */
-    private $resourceConnection;
-    /**
-     * @var string
-     */
-    private $entityId;
-    /**
-     * @var StoreManagerInterface
-     */
-    private $storeManager;
-
-    /**
-     * Data constructor.
-     * @param ResourceConnection $resourceConnection
-     * @param StoreManagerInterface $storeManager
-     * @param MetadataPool $metadataPool
-     * @throws Exception
-     */
     public function __construct(
-        ResourceConnection $resourceConnection,
-        StoreManagerInterface $storeManager,
+        private readonly ResourceConnection $resourceConnection,
+        private readonly StoreManagerInterface $storeManager,
         MetadataPool $metadataPool
     ) {
-        $this->resourceConnection = $resourceConnection;
-        $this->storeManager = $storeManager;
         $this->entityId = $metadataPool->getMetadata(ProductInterface::class)->getLinkField();
     }
 
@@ -60,67 +38,148 @@ class Filter
      */
     public function execute(array $filter, int $storeId = 0): array
     {
-        $entityIds = $this->filterVisibility($filter);
+        $this->prefetchAttributeIds();
 
-        if ($storeId) {
-            $websiteId = $this->getWebsiteId($storeId);
-            $entityIds = $this->filterWebsite($entityIds, $websiteId);
-        }
+        $entityIds = $this->filterVisibility($filter, $storeId);
+        $entityIds = $this->filterStatus($entityIds, $filter['add_disabled_products'], $storeId);
 
-        if (!$filter['add_disabled_products']) {
-            $entityIds = $this->filterEnabledStatus($entityIds);
-        }
-
-        if ($filter['restrict_by_category']) {
-            $entityIds = $this->filterByCategories(
-                $entityIds,
-                $filter['category_restriction_behaviour'],
-                $filter['category']
-            );
-        }
-
-        return $entityIds;
+        return $this->filterByWebsiteAndCategory(
+            $entityIds,
+            $storeId
+                ? $this->getWebsiteId($storeId)
+                : null,
+            $filter['restrict_by_category']
+                ? $filter['category_restriction_behaviour']
+                : null,
+            $filter['category']
+        );
     }
 
     /**
-     * Filter entity ids to exclude products based on visibility
+     * Prefetch and cache attribute IDs for `status` and `visibility`
+     */
+    private function prefetchAttributeIds(): void
+    {
+        $connection = $this->resourceConnection->getConnection();
+
+        $entityTypeTable = $this->resourceConnection->getTableName('eav_entity_type');
+        $eavTable = $this->resourceConnection->getTableName('eav_attribute');
+
+        $attributes = $connection->fetchPairs(
+            $connection->select()
+                ->from(['ea' => $eavTable], ['attribute_code', 'attribute_id'])
+                ->join(
+                    ['et' => $entityTypeTable],
+                    'ea.entity_type_id = et.entity_type_id',
+                    []
+                )
+                ->where('et.entity_type_code = ?', 'catalog_product')
+                ->where('ea.attribute_code IN (?)', ['status', 'visibility'])
+        );
+
+        $this->statusAttributeId = (int)($attributes['status'] ?? 0);
+        $this->visibilityAttributeId = (int)($attributes['visibility'] ?? 0);
+    }
+
+    /**
+     * Filter entity IDs to exclude products based on visibility.
      *
      * @param array $filter
+     * @param int $storeId
      * @return array
      */
-    private function filterVisibility(array $filter): array
+    private function filterVisibility(array $filter, int $storeId = 0): array
     {
-        if ($filter['filter_by_visibility']) {
-            $visibility = is_array($filter['visibility'])
-                ? $filter['visibility']
-                : explode(',', $filter['visibility']);
-        } else {
-            $visibility = [
-                Visibility::VISIBILITY_NOT_VISIBLE,
-                Visibility::VISIBILITY_IN_CATALOG,
-                Visibility::VISIBILITY_IN_SEARCH,
-                Visibility::VISIBILITY_BOTH,
-            ];
+        if (!$this->visibilityAttributeId) {
+            return [];
         }
 
         $connection = $this->resourceConnection->getConnection();
-        $select = $connection->select()->distinct()->from(
-            ['catalog_product_entity_int' => $this->resourceConnection->getTableName('catalog_product_entity_int')],
-            [$this->entityId]
-        )->joinLeft(
-            ['eav_attribute' => $this->resourceConnection->getTableName('eav_attribute')],
-            'eav_attribute.attribute_id = catalog_product_entity_int.attribute_id',
-            []
-        )->where(
-            'value IN (?)',
-            $visibility
-        )->where(
-            'attribute_code = ?',
-            'visibility'
-        )->where(
-            'store_id IN (?)',
-            [0]
-        );
+        $table = $this->resourceConnection->getTableName('catalog_product_entity_int');
+
+        $everyVisibility = [
+            Visibility::VISIBILITY_NOT_VISIBLE,
+            Visibility::VISIBILITY_IN_CATALOG,
+            Visibility::VISIBILITY_IN_SEARCH,
+            Visibility::VISIBILITY_BOTH,
+        ];
+
+        $selected = $filter['filter_by_visibility']
+            ? (is_array($filter['visibility']) ? $filter['visibility'] : explode(',', (string)$filter['visibility']))
+            : $everyVisibility;
+
+        // Convert to integers for SQL safety
+        $visibility = array_filter(array_map('intval', $selected));
+
+        // The filter switched on with nothing selected is a restriction to nothing, which is no
+        // restriction at all. It used to build "value IN ()" and the feed died on a SQL syntax
+        // error instead of being generated - reachable from the admin, and from a store-scope row
+        // that is empty while the default scope has a value.
+        if (!$visibility) {
+            $visibility = $everyVisibility;
+        }
+
+        $select = $connection->select()
+            ->distinct()
+            ->from(['base' => $table], [$this->entityId])
+            ->joinLeft(
+                ['override' => $table],
+                sprintf(
+                    'base.%1$s = override.%1$s AND base.attribute_id = override.attribute_id'
+                    . ' AND override.store_id = %2$d',
+                    $this->entityId,
+                    $storeId
+                ),
+                []
+            )
+            ->where('base.attribute_id = ?', $this->visibilityAttributeId)
+            ->where('base.store_id = ?', 0)
+            ->where('base.value IN (?)', $visibility)
+            ->where(sprintf(
+                '(override.value IS NULL OR override.value IN (%s))',
+                implode(',', array_fill(0, count($visibility), '?'))
+            ), $visibility);
+
+        return $connection->fetchCol($select);
+    }
+
+    /**
+     * Filter entity IDs to exclude products with status disabled efficiently.
+     *
+     * @param array $entityIds
+     * @param bool $addDisabled
+     * @param int $storeId
+     * @return array
+     */
+    private function filterStatus(array $entityIds, bool $addDisabled = false, int $storeId = 0): array
+    {
+        if (empty($entityIds) || $addDisabled || !$this->statusAttributeId) {
+            return $entityIds;
+        }
+
+        $connection = $this->resourceConnection->getConnection();
+        $table = $this->resourceConnection->getTableName('catalog_product_entity_int');
+
+        $select = $connection->select()
+            ->distinct()
+            ->from(['base' => $table], [$this->entityId])
+            ->joinLeft(
+                ['override' => $table],
+                sprintf(
+                    'base.%1$s = override.%1$s AND base.attribute_id = override.attribute_id'
+                    . ' AND override.store_id = %2$d',
+                    $this->entityId,
+                    $storeId
+                ),
+                []
+            )
+            ->where('base.attribute_id = ?', $this->statusAttributeId)
+            ->where('base.store_id = ?', 0)
+            ->where('base.' . $this->entityId . ' IN (?)', $entityIds)
+            ->where(sprintf(
+                '(COALESCE(override.value, base.value) = %d)',
+                Status::STATUS_ENABLED
+            ));
 
         return $connection->fetchCol($select);
     }
@@ -139,91 +198,51 @@ class Filter
     }
 
     /**
-     * Filter entity ids to exclude products by website
+     * Filter entity IDs based on website and category restrictions
      *
      * @param array $entityIds
-     * @param int $websiteId
+     * @param int|null $websiteId A null means no store view to resolve a website from: no filter
+     * @param string|null $categoryBehaviour ('in' to include, 'nin' to exclude)
+     * @param array|null $categoryIds
      * @return array
      */
-    private function filterWebsite(array $entityIds, int $websiteId): array
-    {
+    private function filterByWebsiteAndCategory(
+        array $entityIds,
+        ?int $websiteId,
+        ?string $categoryBehaviour = null,
+        ?array $categoryIds = null
+    ): array {
+        if (empty($entityIds)) {
+            return [];
+        }
+
         $connection = $this->resourceConnection->getConnection();
-        $select = $connection->select()->from(
-            ['catalog_product_entity' => $this->resourceConnection->getTableName('catalog_product_entity')],
-            [$this->entityId]
-        )->join(
-            ['catalog_product_website' => $this->resourceConnection->getTableName('catalog_product_website')],
-            'catalog_product_entity.entity_id = catalog_product_website.product_id',
-        )->where(
-            'catalog_product_website.website_id = ?',
-            $websiteId
-        )->where(
-            "catalog_product_entity.{$this->entityId} in (?)",
-            $entityIds
-        );
+        $cpeTable = $this->resourceConnection->getTableName('catalog_product_entity');
+        $cpwTable = $this->resourceConnection->getTableName('catalog_product_website');
+        $ccpTable = $this->resourceConnection->getTableName('catalog_category_product');
 
-        return $connection->fetchCol($select);
-    }
+        $select = $connection->select()
+            ->distinct()
+            ->from(['cpe' => $cpeTable], [$this->entityId])
+            ->join(['cpw' => $cpwTable], 'cpe.entity_id = cpw.product_id', [])
+            ->where("cpe.{$this->entityId} IN (?)", $entityIds);
 
-    /**
-     * Filter entity ids to exclude products with status disabled
-     *
-     * @param array $entityIds
-     * @return array
-     */
-    private function filterEnabledStatus(array $entityIds): array
-    {
-        $connection = $this->resourceConnection->getConnection();
-        $select = $connection->select()->distinct()->from(
-            ['catalog_product_entity_int' => $this->resourceConnection->getTableName('catalog_product_entity_int')],
-            [$this->entityId]
-        )->join(
-            ['eav_attribute' => $this->resourceConnection->getTableName('eav_attribute')],
-            'eav_attribute.attribute_id = catalog_product_entity_int.attribute_id',
-            []
-        )->where(
-            'value = ?',
-            Status::STATUS_ENABLED
-        )->where(
-            'attribute_code = ?',
-            'status'
-        )->where(
-            'store_id IN (?)',
-            [0]
-        )->where(
-            $this->entityId . ' IN (?)',
-            $entityIds
-        );
+        if ($websiteId !== null) {
+            $select->where('cpw.website_id = ?', $websiteId);
+        }
 
-        return $connection->fetchCol($select);
-    }
+        if (!empty($categoryIds) && $categoryBehaviour !== null) {
+            $inCategories = $connection->select()
+                ->from($ccpTable, ['product_id'])
+                ->where('category_id IN (?)', $categoryIds);
 
-    /**
-     * Filter entity ids to exclude products based on category ids
-     *
-     * @param array $entityIds
-     * @param string $behaviour
-     * @param array $categoryIds
-     * @return array
-     */
-    private function filterByCategories(array $entityIds, string $behaviour, array $categoryIds): array
-    {
-        $connection = $this->resourceConnection->getConnection();
-        $select = $connection->select()->from(
-            ['catalog_product_entity' => $this->resourceConnection->getTableName('catalog_product_entity')],
-            [$this->entityId]
-        )->join(
-            ['catalog_category_product' => $this->resourceConnection->getTableName('catalog_category_product')],
-            'catalog_product_entity.entity_id = catalog_category_product.product_id',
-        )->where(
-            "catalog_product_entity.{$this->entityId} in (?)",
-            $entityIds
-        )->group($this->entityId);
-
-        if ($behaviour == 'in') {
-            $select->where('catalog_category_product.category_id in (?)', $categoryIds);
-        } else {
-            $select->where('catalog_category_product.category_id not in (?)', $categoryIds);
+            if ($categoryBehaviour === 'in') {
+                $select->where('cpe.entity_id IN (?)', $inCategories);
+            } else {
+                // Excluded as soon as the product is in one of the categories: a join with
+                // NOT IN kept every product that also sits in another category.
+                $select->where('cpe.entity_id NOT IN (?)', $inCategories);
+            }
         }
 
         return $connection->fetchCol($select);

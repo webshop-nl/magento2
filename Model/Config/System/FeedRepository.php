@@ -16,6 +16,13 @@ class FeedRepository extends BaseRepository implements FeedInterface
 {
 
     /**
+     * Products per collector run, and the ceiling a preview stops at. Both were literals in the
+     * repository that drove the collector before this release.
+     */
+    private const BATCH_SIZE = 10000;
+    private const PREVIEW_SIZE = 250;
+
+    /**
      * @inheritDoc
      */
     public function getAllEnabledStoreIds(): array
@@ -49,7 +56,7 @@ class FeedRepository extends BaseRepository implements FeedInterface
     /**
      * @inheritDoc
      */
-    public function getAttributes(int $storeId = null): array
+    public function getAttributes(int $storeId): array
     {
         $attributes = [
             'name' => $this->getNameAttribute($storeId),
@@ -493,6 +500,22 @@ class FeedRepository extends BaseRepository implements FeedInterface
      * @param int $storeId
      *
      * @return bool
+     */
+    public function getBatchSize(): int
+    {
+        return self::BATCH_SIZE;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getPreviewSize(): int
+    {
+        return self::PREVIEW_SIZE;
+    }
+
+    /**
+     * @inheritDoc
      */
     public function excludeOutOfStock(int $storeId): bool
     {
