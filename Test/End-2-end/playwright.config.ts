@@ -40,6 +40,16 @@ export default defineConfig({
       testMatch: /\/feed\/.*\.spec\.ts/,
     },
 
+    {
+      name: 'order',
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: '.auth/backend.json',
+      },
+      dependencies: ['feed'],
+      testMatch: /\/order\/.*\.spec\.ts/,
+    },
+
     // Last on purpose: the baseline rewrites the whole configuration and resets it afterwards.
     {
       name: 'baseline',
@@ -47,7 +57,7 @@ export default defineConfig({
         ...devices['Desktop Chrome'],
         storageState: '.auth/backend.json',
       },
-      dependencies: ['feed'],
+      dependencies: ['order'],
       testMatch: /\/baseline\/.*\.spec\.ts/,
     },
   ],

@@ -21,7 +21,7 @@ The counterpart of "everything on": every Yes/No switch of the module off, saved
 
 ## Everything On (`baseline/everything-on.spec.ts`)
 
-The baseline: every configuration field of the module set to its "everything on" value through the admin form, section by section, with the success message, no JS errors of our own and a read-back of every value from core_config_data. Three fields used to be set in CI; this sets all.
+Whether a config path belongs to this module. By the path prefixes the module writes, never by its admin section ids: a section id and the path its fields write are different strings, and comparing the two made every field foreign, so this spec set nothing and still passed.
 
 8. everything on › section webshopnl_general saves with every option on and every value lands in core_config_data
 9. everything on › section feed saves with every option on and every value lands in core_config_data
@@ -78,3 +78,53 @@ Until release 1.2.0 the feed shipped 1859 of its 2040 products without a link: o
 30. Product URL › every product has a non-empty productURL
 31. Product URL › every productURL is an absolute http(s) address
 32. Product URL › a variant of a configurable has a link of its own
+
+## Order Access (`order/order-access.spec.ts`)
+
+What installing the module leaves behind for the marketplace to authenticate with. The order route sits behind an access control resource, and the module creates its own integration during setup to hold the token a merchant pastes into their account. This spec runs before anything else in the order suite, so it describes the state the installation produced rather than a state the tests arranged. The permission is granted only at the moment the integration is created, so an installation that failed here leaves a token that every request is refused with.
+
+33. Integration the module installs for itself › the shop this suite runs against has a base currency
+34. Integration the module installs for itself › installing the module leaves an active integration with a token
+35. Integration the module installs for itself › that integration may use the order route
+36. Integration the module installs for itself › Magento's own access control allows that role on the order resource
+37. Integration the module installs for itself › with bearer tokens disallowed the route refuses the module's own token
+38. Integration the module installs for itself › the order route accepts the token the module mints
+39. Integration the module installs for itself › a route behind one of Magento's own resources answers the same token
+40. Integration the module installs for itself › the grant sits on a role the Web API actually consults
+
+## Order Import (`order/order-import.spec.ts`)
+
+Order import: a marketplace posts an order to the module's REST route and the shop has to end up with that order. Release 1.2.0 repaired four ways this could die without saying anything useful, and none of them was reachable from a unit test: a null return from the quote submission dereferenced as an object, a catch reporting on a variable that does not exist when the first product fails, invoice methods called on an interface that does not declare them, and an access token dereferenced without a check. This spec drives the real route with a real token, so those paths run. Each case asserts against the database rather than the response, because the response is the module's own summary of what it believes it did.
+
+41. Order import › a posted order becomes a Magento order, and the response names it
+42. Order import › an item price arrives in cents and lands as a currency amount
+43. Order import › a quantity above one multiplies the line, not the price
+44. Order import › the shipping cost from the payload ends up on the order
+45. Order import › an unavailable shipping method falls back to the configured fallback
+46. Order import › without customer import the order stays a guest order
+47. Order import › with customer import an account is created in the configured group
+48. Order import › company and VAT number land on the billing address
+49. Order import › a payload without a phone number still gets a telephone, because Magento demands one
+50. Order import › a mobile number wins over a landline
+51. Order import › every imported order is invoiced
+52. Order import › the same order posted twice is refused, and no second order appears
+53. Order import › the import records when it last ran
+54. Order import › the imported order renders in the admin
+55. Order import: what the module refuses › a payload with no delivery address is refused with a message naming it
+56. Order import: what the module refuses › a payload with no billing address is refused with a message naming it
+57. Order import: what the module refuses › a payload with no email is refused with a message naming it
+58. Order import: what the module refuses › a payload with no first name is refused with a message naming it
+59. Order import: what the module refuses › a payload with no surname is refused with a message naming it
+60. Order import: what the module refuses › a payload with no products is refused with a message naming it
+61. Order import: what the module refuses › a payload with no shipping cost is refused with a message naming it
+62. Order import: what the module refuses › a payload without an order id is refused
+63. Order import: what the module refuses › a request without a token is refused by the ACL
+
+## Order Status (`order/order-status.spec.ts`)
+
+The two routes a marketplace polls after it has sent an order: the status of one order, and the module's own version. The status route is where release 1.2.0 fixed a crash: the shipment lookup runs on Magento's concrete order model while the repository is declared to hand back the interface, and the shipment collection of an order that was never saved is false rather than empty. Both paths are exercised here, with an order that has no shipment and one that has a shipment with tracking.
+
+64. Order status route › an order without a shipment reports no delivery data
+65. Order status route › a shipped order reports its tracking number
+66. Order status route › an unknown order id is answered with a bad request, not an exception
+67. Order status route › the info route reports the installed version

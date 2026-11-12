@@ -31,6 +31,7 @@
 * `Test/Unit/Architecture` pins the ACL, the CLI wiring, the configuration paths and defaults, the cron wiring, the data patch contract, the namespaces and the changelog format.
 * `Test/Unit/Service/ProductData` covers the collectors: price carry-over, rule prices, MSI reservations, configurable keys, category paths, item groups and the visibility filter.
 * An end-to-end suite runs on Magento 2.4.7 and 2.4.9 and pins what this release repairs: every row has a link, a shop with two store views gets two feeds, a disabled product stays out, the stock filter works, and a configurable parent carries the price of its cheapest buyable variant.
+* The order import is driven over its own REST route with a real integration token: a posted order becomes a Magento order with the right price, quantity, shipping cost and addresses, a customer account is created when that is switched on, the same order twice is refused, every refusal names the field it is missing, an unauthenticated request is denied, and the status route reports a shipment with its tracking number.
 * `E2E-TESTS.md` is generated from the Playwright test list.
 
 **Compatibility:**
