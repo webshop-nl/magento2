@@ -805,7 +805,10 @@ export default class WebshopNLApi extends BaseApi {
       $track->setTrackNumber(${JSON.stringify(trackingNumber)});
       $track->setCarrierCode('custom');
       $track->setTitle('E2E carrier');
-      echo $ship->execute(${orderEntityId}, [], false, false, null, [], [$track]);
+      // Tracks are the sixth argument and packages the seventh. Passed the other way around the
+      // track is filed as a package, no tracking row is written, and the status route is blamed
+      // for reporting no delivery data.
+      echo $ship->execute(${orderEntityId}, [], false, false, null, [$track]);
     `);
     console.log(`Order ${orderEntityId} shipped with tracking ${trackingNumber}`);
   }
