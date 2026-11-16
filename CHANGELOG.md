@@ -25,6 +25,7 @@
 * Fixed "Use Parent URL for Simples" under Grouped Products doing nothing. The field had no configuration path at all; a value saved by an earlier release is moved during `setup:upgrade`.
 * Fixed `setup:upgrade` failing on Magento 2.4.9 with "Class WebshopNL\Connect\Console\Command\GenerateFeed\Interceptor does not exist". The console command is registered on the interface Magento resolves, both of its dependencies are injected as proxies, and `configure()` declares its return type.
 * Fixed the Product Feed and Order sections being behind ACL resources that no `acl.xml` declares, which denied them to every admin role without full access. All three sections are now behind `WebshopNL_Connect::config`.
+* Fixed an imported order arriving with every total at zero. The quote is saved before it has items, and the shipping address caches the item list it sees on that first totals collect; nothing clears that cache, so the base amounts, row totals and shipping amount stayed at zero while the line price itself was right.
 * Removed a reference to another extension's product attribute in the feed filter, and the two category attributes this extension never creates. The category path in the feed is the Magento one.
 
 **Tests:**
