@@ -103,6 +103,15 @@ class Add
                 $this->itemResourceModel->save($addedItem);
                 $qty += (int)$item['quantity'];
             }
+
+            // The quote is saved before it has items, and saving it through the cart repository
+            // collects the totals. A shipping address caches the item list it sees on that first
+            // collect, and nothing in Magento ever clears that cache, so every total stayed at
+            // zero no matter how often the totals were collected afterwards. The cache has to go
+            // wherever the item list changes.
+            foreach ($quote->getAllAddresses() as $address) {
+                $address->unsetData('cached_items_all');
+            }
         } catch (Exception $exception) {
             $exceptionMsg = $this->reformatException($exception, $item, (int)$store->getStoreId());
             throw new CouldNotImportOrder($exceptionMsg);
