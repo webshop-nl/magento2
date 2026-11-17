@@ -128,3 +128,9 @@ The two routes a marketplace polls after it has sent an order: the status of one
 65. Order status route › a shipped order reports its tracking number
 66. Order status route › an unknown order id is answered with a bad request, not an exception
 67. Order status route › the info route reports the installed version
+
+## Rest Schema (`order/rest-schema.spec.ts`)
+
+The REST schema of the whole shop. Magento reflects the docblocks of every service in webapi.xml when it is requested, so one type it cannot resolve (a short class name, a bare "array") turns /rest/all/schema into a 500 for every module in the shop, while the module's own endpoints keep working. The schema lists only the routes the caller may use, hence the admin token.
+
+68. REST schema › GET /rest/all/schema lists this module without an error

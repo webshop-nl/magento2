@@ -15,6 +15,7 @@
 * Every configuration field offers "Use system value". A select whose first option means something now has that choice declared as a default, so what the admin shows with the checkbox ticked is what the module reads.
 
 **Bugfixes:**
+* The REST schema of the whole shop (`/rest/all/schema`) answered 500: the order and info services declared a bare `array` return, and Magento's web API only knows typed arrays such as `mixed[]`. The returns are typed, an architecture test walks every service in `webapi.xml` for it, and the E2E suite requests the shop's schema. **Tests:** `WebapiDocblockTypesTest`, `rest-schema.spec.ts`.
 * Fixed the product feed carrying no link for most of its products. 1859 of 2040 rows had an empty `productURL`: only a product with a URL rewrite of its own got one, so every variant of a configurable or bundle was published without a link. Every row now carries one.
 * Fixed `bin/magento webshopnl:feed:create --store-id=1` failing with a type error. The option arrives as a string and was passed straight to a method that requires an integer, so the option could never be used.
 * Fixed a configurable parent being published with a price nothing in the catalogue sells for. The parent took the minimum price from Magento's price index, which with a catalog price rule sits below the price of every variant. It now carries the cheapest price a customer can pay for one of its variants, which is what the product page shows. Neither index column answers that on its own: the minimum can sit below every variant and the final price above them, depending on whether the discount applies to the parent or to the variants.
@@ -29,7 +30,7 @@
 * Removed a reference to another extension's product attribute in the feed filter, and the two category attributes this extension never creates. The category path in the feed is the Magento one.
 
 **Tests:**
-* `Test/Unit/Architecture` pins the ACL, the CLI wiring, the configuration paths and defaults, the cron wiring, the data patch contract, the namespaces and the changelog format.
+* `Test/Unit/Architecture` pins the ACL, the web API docblock types, the CLI wiring, the configuration paths and defaults, the cron wiring, the data patch contract, the namespaces and the changelog format.
 * `Test/Unit/Service/ProductData` covers the collectors: price carry-over, rule prices, MSI reservations, configurable keys, category paths, item groups and the visibility filter.
 * An end-to-end suite runs on Magento 2.4.7 and 2.4.9 and pins what this release repairs: every row has a link, a shop with two store views gets two feeds, a disabled product stays out, the stock filter works, and a configurable parent carries the price of its cheapest buyable variant.
 * The order import is driven over its own REST route with a real integration token: a posted order becomes a Magento order with the right price, quantity, shipping cost and addresses, a customer account is created when that is switched on, the same order twice is refused, every refusal names the field it is missing, an unauthenticated request is denied, and the status route reports a shipment with its tracking number.
