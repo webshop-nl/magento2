@@ -30,6 +30,7 @@ class AdminResourceTest extends TestCase
     private const EXPECTED = [
         'Feed\\Generate' => self::CONFIG,
         'Feed\\Preview' => self::CONFIG,
+        'Log\\Stream' => self::CONFIG,
     ];
 
     /**

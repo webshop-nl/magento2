@@ -7,6 +7,7 @@
 * Every setting can be put back to "Use system value" per store view, and every choice has a default to fall back to.
 * Magento 2.4.6 and PHP 8.2 are the minimum, tested against 2.4.7 through 2.4.9.
 * A large catalogue needs one price lookup per batch instead of one per product.
+* The last 100 debug and error log records can be read from the Debugging settings, and downloaded as a text file.
 * The feeds overview says the feed is switched off, instead of reporting the module as disabled.
 * Added documentation for the feed command.
 

@@ -1,0 +1,16 @@
+<?php
+/**
+ * Copyright © Magmodules.eu. All rights reserved.
+ * See COPYING.txt for license details.
+ *
+ * @var WebshopNL\Connect\Block\Adminhtml\System\Config\Button\CheckButtonWrapper $block
+ */
+
+use WebshopNL\Connect\Block\Adminhtml\System\Config\Button\DebugCheck;
+use WebshopNL\Connect\Block\Adminhtml\System\Config\Button\ErrorCheck;
+
+?>
+<div class="webshopnl-debug-button-wrapper">
+    <?= $block->getLayout()->createBlock(DebugCheck::class)->toHtml(); ?>
+    <?= $block->getLayout()->createBlock(ErrorCheck::class)->toHtml(); ?>
+</div>

@@ -227,3 +227,57 @@
     text-align: center;
     border-radius: 2px;
 }
+//
+//  [ Debugging ]: log buttons and the modal they open
+//  ---------------------------------------------
+
+.webshopnl-debug-button-wrapper {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+
+    // The modal containers are children of this wrapper until the widget lifts them out; without
+    // this every button would land on its own row.
+    > [id$='-modal'] {
+        display: none;
+    }
+
+    #webshopnl-button_debug,
+    #webshopnl-button_error {
+        background: @webshopnl-bg__blue;
+        color: #fff;
+        font-weight: 700;
+        font-size: 14px;
+        padding: 1rem;
+        line-height: 20px;
+        border: none;
+        min-width: 140px;
+        text-align: center;
+        border-radius: 2px;
+
+        i {
+            margin-right: .5rem;
+        }
+    }
+}
+
+.webshopnl-modal {
+    .webshopnl-result-item {
+        padding: .8rem 0;
+        border-bottom: 1px solid @webshopnl-color-gray_light;
+
+        strong {
+            color: @webshopnl-color__dark-gray;
+            font-size: 1.2rem;
+        }
+
+        p {
+            margin: .3rem 0 0;
+            word-break: break-word;
+        }
+
+        &:nth-child(odd) {
+            background: @webshopnl-bg__odd;
+        }
+    }
+}

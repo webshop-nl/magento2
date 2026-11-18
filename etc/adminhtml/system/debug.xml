@@ -14,5 +14,10 @@
             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
             <config_path>webshopnl/general/debug</config_path>
         </field>
+        <field id="check_button_wrapper" translate="label" sortOrder="20"
+               showInDefault="1" showInWebsite="0" showInStore="0">
+            <label/>
+            <frontend_model>WebshopNL\Connect\Block\Adminhtml\System\Config\Button\CheckButtonWrapper</frontend_model>
+        </field>
     </group>
 </include>
