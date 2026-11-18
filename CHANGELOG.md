@@ -20,6 +20,7 @@
 * The feed can be generated for one store view from the command line.
 * Imported orders carry their totals; the order, line and shipping amounts arrived at zero.
 * The Product Feed and Order settings are available to admin roles without full access.
+* The order import has its own Enable under Orders; that setting switched the whole module, so turning the import off also stopped the feed.
 * Registration opens the Webshop.nl partner portal; new installations pointed at the development portal instead.
 * The module installs and upgrades on Magento 2.4.9.
 * The shop's REST schema can be generated again with the module installed.

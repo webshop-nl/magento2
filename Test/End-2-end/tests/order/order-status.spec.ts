@@ -23,6 +23,7 @@ const TRACKING = 'E2E-TRACK-0001';
 
 const BASE_CONFIG: Record<string, string | number> = {
   'webshopnl/general/enable': 1,
+  'webshopnl/order/enable': 1,
   'webshopnl/order/shipping_method': 'flatrate_flatrate',
   'webshopnl/order/shipping_method_fallback': 'flatrate_flatrate',
   'webshopnl/order/import_customer': 0,

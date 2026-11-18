@@ -13,10 +13,8 @@ namespace WebshopNL\Connect\Api\Config\System;
 interface OrderInterface extends FeedInterface
 {
 
-    /** General Group */
-    public const XML_PATH_ORDER_ENABLE = 'webshopnl/general/enable';
-
     /** Order Group */
+    public const XML_PATH_ORDER_ENABLE = 'webshopnl/order/enable';
     public const XML_PATH_SHIPPING_METHOD = 'webshopnl/order/shipping_method';
     public const XML_PATH_SHIPPING_METHOD_FALLBACK = 'webshopnl/order/shipping_method_fallback';
     public const XML_PATH_IMPORT_CUSTOMER = 'webshopnl/order/import_customer';

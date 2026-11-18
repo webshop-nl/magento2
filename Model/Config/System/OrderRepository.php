@@ -21,7 +21,7 @@ class OrderRepository extends FeedRepository implements OrderInterface
      */
     public function isOrderEnabled(?int $storeId = null): bool
     {
-        return $this->isSetFlag(self::XML_PATH_ORDER_ENABLE, $storeId);
+        return $this->isEnabled($storeId) && $this->isSetFlag(self::XML_PATH_ORDER_ENABLE, $storeId);
     }
 
     /**

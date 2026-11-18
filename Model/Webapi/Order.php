@@ -115,6 +115,16 @@ class Order implements OrderInterface
      */
     public function processOrder(int $storeId): array
     {
+        if (!$this->configRepository->isOrderEnabled($storeId)) {
+            return [
+                [
+                    'module_version' => $this->configRepository->getExtensionVersion(),
+                    'status' => 'REJECTED',
+                    'message' => 'Order import is disabled for this store'
+                ]
+            ];
+        }
+
         try {
             $post = $this->driver->fileGetContents('php://input');
             $orderData = $this->jsonSerializer->unserialize($post);

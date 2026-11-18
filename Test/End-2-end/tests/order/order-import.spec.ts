@@ -30,6 +30,7 @@ const PRODUCT_SKU = '24-MB01';
 /** What every case starts from: the module on, orders on, a known shipping method. */
 const BASE_CONFIG: Record<string, string | number> = {
   'webshopnl/general/enable': 1,
+  'webshopnl/order/enable': 1,
   'webshopnl/order/shipping_method': 'flatrate_flatrate',
   'webshopnl/order/shipping_method_fallback': 'flatrate_flatrate',
   'webshopnl/order/import_customer': 0,
@@ -270,6 +271,19 @@ test.describe('Order import: what the module refuses', () => {
     const response = await api.postOrder(baseURL!, payload, 1);
     expect(JSON.stringify(response.body), 'says the order id is missing').toContain('order_id');
     expect(api.orderCount(orderId), 'no order was created').toBe(0);
+  });
+
+  test('with the order import switched off the route refuses, and the feed is untouched', async ({ baseURL }) => {
+    await api.setMagentoConfig(baseURL!, { 'webshopnl/order/enable': 0 });
+    const payload = api.buildOrderData({ items: { products: [api.payloadProduct(productId, 1999)] } });
+
+    const response = await api.postOrder(baseURL!, payload, 1);
+    expect(response.status, 'the route answers rather than failing').toBe(200);
+    expect(result(response.body).status, 'refused').toBe('REJECTED');
+    expect(api.orderCount(String(payload.order_id)), 'no order was created').toBe(0);
+
+    // The setting is its own, so turning the import off leaves the module and its feed on.
+    expect(api.requireDb().getScopedConfig('webshopnl/general/enable'), 'the module stays on').toBe('1');
   });
 
   test('a request without a token is refused by the ACL', async ({ baseURL }) => {
