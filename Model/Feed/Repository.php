@@ -151,7 +151,7 @@ class Repository implements FeedRepository
 
         $url = sprintf(
             '%s%s/%s',
-            $this->configRepository->getStore($storeId)->getBaseUrl(UrlInterface::URL_TYPE_MEDIA),
+            (string)($this->configRepository->getStore($storeId)?->getBaseUrl(UrlInterface::URL_TYPE_MEDIA) ?? ''),
             self::DEFAULT_DIRECTORY,
             $filename
         );

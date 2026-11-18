@@ -73,9 +73,9 @@ interface RepositoryInterface extends System\OrderInterface
      * Get store
      *
      * @param null $storeId
-     * @return StoreInterface
+     * @return StoreInterface|null
      */
-    public function getStore(?int $storeId = null): StoreInterface;
+    public function getStore(?int $storeId = null): ?StoreInterface;
 
     /**
      * Support link for extension.

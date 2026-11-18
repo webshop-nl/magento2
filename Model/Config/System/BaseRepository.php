@@ -12,7 +12,6 @@ use Magento\Config\Model\ResourceModel\Config as ConfigData;
 use Magento\Config\Model\ResourceModel\Config\Data\CollectionFactory as ConfigDataCollectionFactory;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\ProductMetadataInterface;
-use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Model\ScopeInterface;
@@ -90,32 +89,38 @@ class BaseRepository
             $scope = ScopeInterface::SCOPE_STORE;
         }
 
-        if (empty($storeId)) {
-            $storeId = $this->getStore()->getId();
+        $storeId = $storeId ?: $this->currentStoreId();
+        if ($storeId === null) {
+            return $this->scopeConfig->isSetFlag($path, ScopeConfigInterface::SCOPE_TYPE_DEFAULT);
         }
         return $this->scopeConfig->isSetFlag($path, $scope, $storeId);
     }
 
     /**
-     * @param $storeId
-     * @return StoreInterface
+     * Retrieve store instance by ID or default store, or null when the shop has no stores yet.
+     *
+     * Configuration is read while setup:install is still creating the websites and stores. Asking
+     * the store manager a second time there is fatal: WebsiteRepository caches the empty result for
+     * the rest of the process, so the website setup:install creates moments later is never seen and
+     * Magento_InventorySales fails to apply its own schema patch.
      */
-    public function getStore(?int $storeId = null): StoreInterface
+    public function getStore(?int $storeId = null): ?StoreInterface
     {
         try {
-            return $this->storeManager->getStore($storeId);
-        } catch (Exception $e) {
-            if ($store = $this->storeManager->getDefaultStoreView()) {
-                return $store;
-            }
+            return $storeId !== null ? $this->storeManager->getStore($storeId) : $this->storeManager->getStore();
+        } catch (\Throwable $e) {
+            return null;
         }
-        $stores = $this->storeManager->getStores();
-        $store = reset($stores);
-        if ($store === false) {
-            throw new NoSuchEntityException(__('No store view is available.'));
-        }
+    }
 
-        return $store;
+    /**
+     * Retrieve the store ID to read configuration for, or null when no store exists.
+     */
+    private function currentStoreId(): ?int
+    {
+        $store = $this->getStore();
+
+        return $store === null ? null : (int)$store->getId();
     }
 
     /**
@@ -158,8 +163,9 @@ class BaseRepository
         ?int $storeId = null,
         ?string $scope = null
     ): string {
-        if (!$storeId) {
-            $storeId = (int)$this->getStore()->getId();
+        $storeId = $storeId ?: $this->currentStoreId();
+        if ($storeId === null) {
+            return (string)$this->scopeConfig->getValue($path, ScopeConfigInterface::SCOPE_TYPE_DEFAULT);
         }
         $scope = $scope ?? ScopeInterface::SCOPE_STORE;
         return (string)$this->scopeConfig->getValue($path, $scope, (int)$storeId);

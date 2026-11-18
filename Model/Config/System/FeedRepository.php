@@ -267,7 +267,7 @@ class FeedRepository extends BaseRepository implements FeedInterface
     public function getStaticFields(int $storeId): array
     {
         $staticFields = [
-            'currency' => $this->getStore($storeId)->getCurrentCurrency()->getCode(),
+            'currency' => $this->getStore($storeId)?->getCurrentCurrency()->getCode(),
             'extra_info' => $this->getExtraInfo($storeId),
             'utm_string' => $this->getUtmString($storeId)
         ];
