@@ -13,7 +13,7 @@
                 <version>v1.2.0</version>
                 <installation_id></installation_id>
                 <enable>0</enable>
-                <mode>development</mode>
+                <mode>production</mode>
                 <debug>0</debug>
             </general>
             <feeds>
@@ -50,6 +50,7 @@
                 <custom_filters>0</custom_filters>
             </feed>
             <order>
+                <enable>0</enable>
                 <shipping_method>webshopnl_webshopnl</shipping_method>
                 <import_customer>0</import_customer>
                 <separate_house_number>0</separate_house_number>
