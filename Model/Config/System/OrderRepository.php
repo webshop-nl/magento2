@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace WebshopNL\Connect\Model\Config\System;
 
 use Magento\Tax\Model\Config as TaxConfig;
+use WebshopNL\Connect\Api\Config\RepositoryInterface as ConfigRepositoryInterface;
 use WebshopNL\Connect\Api\Config\System\OrderInterface;
 
 /**
@@ -21,7 +22,8 @@ class OrderRepository extends FeedRepository implements OrderInterface
      */
     public function isOrderEnabled(?int $storeId = null): bool
     {
-        return $this->isEnabled($storeId) && $this->isSetFlag(self::XML_PATH_ORDER_ENABLE, $storeId);
+        return $this->isSetFlag(ConfigRepositoryInterface::XML_PATH_EXTENSION_ENABLE, $storeId)
+            && $this->isSetFlag(self::XML_PATH_ORDER_ENABLE, $storeId);
     }
 
     /**
