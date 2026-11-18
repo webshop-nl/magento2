@@ -17,8 +17,8 @@ export default class GridPage {
 
   async open(route: string): Promise<void> {
     await this.page.goto(adminUrl(route));
-    await this.page.waitForLoadState('networkidle');
-    // The grid arrives with its own data request, long after the admin's pollers have settled.
+    // The grid arrives with its own data request; waiting for it to be on screen is the signal,
+    // where networkidle waits for pollers that never stop.
     await expect(this.page.locator('[data-role="grid-wrapper"]').first()).toBeVisible({ timeout: 30_000 });
     await expect(this.page.locator('body')).not.toContainText(MAGENTO_ERROR);
     await this.settled();
@@ -44,8 +44,17 @@ export default class GridPage {
     }
   }
 
+  /**
+   * Wait for the grid to be done, not for the page to go quiet.
+   *
+   * This waited on networkidle first, which the admin never really reaches: a bookmark save follows
+   * every grid action and the page keeps polling, so Playwright's 500ms of silence arrived seconds
+   * after the rows were already on screen. Measured on a price history grid: the render request
+   * answered in 121ms and the loading mask was gone after 609ms, while each filter in the baseline
+   * cost 5 to 11 seconds. With 39 filter and sort actions in one grid spec that was minutes of
+   * nothing, enough to run the spec into its own timeout.
+   */
   async settled(): Promise<void> {
-    await this.timed('networkidle', this.page.waitForLoadState('networkidle', { timeout: 30_000 }));
     await expect(this.page.locator('.admin__data-grid-loading-mask:visible')).toHaveCount(0, { timeout: 30_000 });
   }
 
