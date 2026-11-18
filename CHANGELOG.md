@@ -2,40 +2,33 @@
 
 ## [1.2.0]
 
-**Features:**
-* The product feed is now built on a shared ProductData service. Products, stock, prices, images and categories come out of one collector. The feed fields and the NDJSON structure are unchanged.
-* Added a unit test suite (`Test/Unit`) covering the collectors and a set of architecture gates that pin the ACL, the CLI wiring, the configuration paths, the cron wiring, the data patch contract and the changelog format. It runs in CI on PHP 8.2 to 8.5.
-* Added `docs/CLI_COMMANDS.md` for `bin/magento webshopnl:feed:create`.
-
 **Improvements:**
-* PHP 8.2 or newer is required, and Magento 2.4.6 or newer, the first release that runs on PHP 8.2. The compile and PHPStan job runs PHP 8.2 on Magento 2.4.7-p10, 8.3 and 8.4 on 2.4.8-p5 and 8.5 on 2.4.9.
-* PHPStan runs at level 8 without a baseline; it ran at level 1 before.
-* The code passes the Magento coding standard at severity 6. The sniffer ran without a standard before and so checked nothing. CI also runs a PHP 8.2 to 8.6 compatibility check.
-* The feed cron runs in its own cron group (`webshopnl`, separate process), so a long feed run no longer holds up Magento's default group.
-* Every configuration field offers "Use system value". A select whose first option means something now has that choice declared as a default, so what the admin shows with the checkbox ticked is what the module reads.
+* The feed runs in its own cron group, so a long feed run no longer holds up other scheduled jobs.
+* Every setting can be put back to "Use system value" per store view, and every choice has a default to fall back to.
+* Magento 2.4.6 and PHP 8.2 are the minimum, tested against 2.4.7 through 2.4.9.
+* A large catalogue needs one price lookup per batch instead of one per product.
+* Added documentation for the feed command.
 
 **Bugfixes:**
-* The REST schema of the whole shop (`/rest/all/schema`) answered 500: the order and info services declared a bare `array` return, and Magento's web API only knows typed arrays such as `mixed[]`. The returns are typed, an architecture test walks every service in `webapi.xml` for it, and the E2E suite requests the shop's schema. **Tests:** `WebapiDocblockTypesTest`, `rest-schema.spec.ts`.
-* Fixed the product feed carrying no link for most of its products. 1859 of 2040 rows had an empty `productURL`: only a product with a URL rewrite of its own got one, so every variant of a configurable or bundle was published without a link. Every row now carries one.
-* Fixed `bin/magento webshopnl:feed:create --store-id=1` failing with a type error. The option arrives as a string and was passed straight to a method that requires an integer, so the option could never be used.
-* Fixed a configurable parent being published with a price nothing in the catalogue sells for. The parent took the minimum price from Magento's price index, which with a catalog price rule sits below the price of every variant. It now carries the cheapest price a customer can pay for one of its variants, which is what the product page shows. Neither index column answers that on its own: the minimum can sit below every variant and the final price above them, depending on whether the discount applies to the parent or to the variants.
-* Fixed the feed cron never running. `crontab.xml` named `Model\Cron\GenerateFeed` while the class is `GenerateFeeds`, so Magento could not start the job at all; and the job read its frequency from `webshopnl/feeds/cron_frequency` while the field writes `webshopnl/feed/cron_frequency`, so it would have returned at once. The schedule is now read from the Frequency field itself, "Custom" resolves to the custom expression on save, and a stored "Custom" from an earlier release is replaced by its expression during `setup:upgrade`.
-* Fixed a shop with more than one store view generating only the first feed. The price collection was built once and reused, so the second store view added the same join a second time and the run stopped on "You cannot define a correlation name 'price_index' more than once".
-* Fixed disabled products reaching the feed. The "Exclude out of stock products" setting filled in the unrelated "add disabled products" flag, so with the setting off every disabled product was published, and no product was ever excluded for being out of stock. Both now do what they say.
-* Fixed "Use Parent Data for Simples" doing nothing for configurable, bundle and grouped products. The fields stored under `..._parent_atts` while the feed read `..._parent_attributes`.
-* Fixed "Use Parent URL for Simples" under Grouped Products doing nothing. The field had no configuration path at all; a value saved by an earlier release is moved during `setup:upgrade`.
-* Fixed `setup:upgrade` failing on Magento 2.4.9 with "Class WebshopNL\Connect\Console\Command\GenerateFeed\Interceptor does not exist". The console command is registered on the interface Magento resolves, both of its dependencies are injected as proxies, and `configure()` declares its return type.
-* Fixed the Product Feed and Order sections being behind ACL resources that no `acl.xml` declares, which denied them to every admin role without full access. All three sections are now behind `WebshopNL_Connect::config`.
-* Fixed an imported order arriving with every total at zero. The quote is saved before it has items, and the shipping address caches the item list it sees on that first totals collect; nothing clears that cache, so the base amounts, row totals and shipping amount stayed at zero while the line price itself was right.
-* Removed a reference to another extension's product attribute in the feed filter, and the two category attributes this extension never creates. The category path in the feed is the Magento one.
+* Every product in the feed carries a link; variants of configurable and bundle products were published without one.
+* A shop with more than one store view gets a feed for every store view, not only the first.
+* The scheduled feed run works, and a custom schedule is kept as entered.
+* Disabled products stay out of the feed, and "Exclude out of stock products" filters on stock.
+* A configurable product is published at the cheapest price one of its variants sells for, which is what the product page shows.
+* "Use Parent Data for Simples" and "Use Parent URL for Simples" apply to the products they are set for.
+* A product that belongs to more than one parent takes its title, link, images and categories from its configurable, the same way everywhere in the feed.
+* The feed can be generated for one store view from the command line.
+* Imported orders carry their totals; the order, line and shipping amounts arrived at zero.
+* The Product Feed and Order settings are available to admin roles without full access.
+* The module installs and upgrades on Magento 2.4.9.
+* The shop's REST schema can be generated again with the module installed.
+* The feed no longer refers to attributes this module does not create; the category path is the Magento one.
 
 **Tests:**
-* `Test/Unit/Architecture` pins the ACL, the web API docblock types, the CLI wiring, the configuration paths and defaults, the cron wiring, the data patch contract, the namespaces and the changelog format.
-* `Test/Unit/Service/ProductData` covers the collectors: price carry-over, rule prices, MSI reservations, configurable keys, category paths, item groups and the visibility filter.
-* An end-to-end suite runs on Magento 2.4.7 and 2.4.9 and pins what this release repairs: every row has a link, a shop with two store views gets two feeds, a disabled product stays out, the stock filter works, and a configurable parent carries the price of its cheapest buyable variant.
-* The order import is driven over its own REST route with a real integration token: a posted order becomes a Magento order with the right price, quantity, shipping cost and addresses, a customer account is created when that is switched on, the same order twice is refused, every refusal names the field it is missing, an unauthenticated request is denied, and the status route reports a shipment with its tracking number.
-* `E2E-TESTS.md` is generated from the Playwright test list.
+* 68 end-to-end tests on Magento 2.4.7 and 2.4.9 covering the feed, the order import over its own REST route, and the admin settings.
+* 145 unit tests with architecture checks on the ACL, cron wiring, configuration paths and defaults, web API types, CLI wiring and the data patch contract.
 
 **Compatibility:**
 * Magento 2.4.6 and up
 * PHP 8.2 and up
+
