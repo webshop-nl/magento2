@@ -13,6 +13,9 @@
 
 **Bugfixes:**
 * Every product in the feed carries a link that opens: a variant has no page of its own, so it is published on the page of its parent, where it can be bought.
+* The available quantity accounts for what is already sold; reservations were dropped, so a product with ten in stock and eight sold was offered as ten.
+* "Yes" and "Yes, with Auto-Link" do what they say; the attribute link was put on the first and left off the second.
+* The log viewer shows one entry per record, instead of the first record with the rest appended to it.
 * The feed can be downloaded from the Feeds overview; the button led to a page that does not exist.
 * The generation time is shown in the timezone of the store, instead of UTC.
 * A shop with more than one store view gets a feed for every store view, not only the first.

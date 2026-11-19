@@ -38,7 +38,7 @@ class MsiReservationsTest extends TestCase
                 ['product_id' => 2, 'quantity' => 10, 'is_salable' => 1],
                 ['product_id' => 3, 'quantity' => 10, 'is_salable' => 1],
             ],
-            reservations: [1 => 4, 2 => 6, 3 => 1]
+            reservations: [1 => -4, 2 => -6, 3 => -1]
         );
 
         $result = $this->getMsiStock($stock);
@@ -55,7 +55,7 @@ class MsiReservationsTest extends TestCase
                 ['product_id' => 1, 'quantity' => 5, 'is_salable' => 1],
                 ['product_id' => 2, 'quantity' => 8, 'is_salable' => 1],
             ],
-            reservations: [1 => 2]
+            reservations: [1 => -2]
         );
 
         $result = $this->getMsiStock($stock);
@@ -65,16 +65,33 @@ class MsiReservationsTest extends TestCase
     }
 
     /**
-     * A reservation is stored as a negative number; the collector flips it and never goes below nil.
+     * Magento books a reservation for a placed order as a negative quantity and derives the
+     * salable quantity by adding it (GetProductSalableQty). Reading that number as a positive
+     * amount to subtract, which is what the fixtures above used to say, turned every reservation
+     * into nil: a product with ten in stock and eight sold was published as ten.
      */
-    public function testANegativeReservationDoesNotAddStock(): void
+    public function testSalableQuantityNeverGoesBelowNil(): void
     {
         $stock = $this->collector(
             stockRows: [['product_id' => 1, 'quantity' => 5, 'is_salable' => 1]],
-            reservations: [1 => -3]
+            reservations: [1 => -8]
         );
 
-        self::assertSame(5, $this->getMsiStock($stock)[1]['salable_qty']);
+        self::assertSame(0, $this->getMsiStock($stock)[1]['salable_qty']);
+    }
+
+    /**
+     * A positive row is a compensation, for an order that was cancelled before the stock went
+     * back. Magento adds it like any other reservation, so the feed does too.
+     */
+    public function testACompensationIsAddedTheWayMagentoAddsIt(): void
+    {
+        $stock = $this->collector(
+            stockRows: [['product_id' => 1, 'quantity' => 5, 'is_salable' => 1]],
+            reservations: [1 => 3]
+        );
+
+        self::assertSame(8, $this->getMsiStock($stock)[1]['salable_qty']);
     }
 
     /**
@@ -96,7 +113,7 @@ class MsiReservationsTest extends TestCase
     {
         $stock = $this->collector(
             stockRows: [['product_id' => 1, 'quantity' => 5, 'is_salable' => 1]],
-            reservations: [1 => 2],
+            reservations: [1 => -2],
             channels: [1, 7]
         );
 

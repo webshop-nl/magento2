@@ -20,6 +20,7 @@ use WebshopNL\Connect\Service\ProductData\ChildSelection;
 use WebshopNL\Connect\Service\ProductData\Collector;
 use WebshopNL\Connect\Service\ProductData\Data;
 use PHPUnit\Framework\TestCase;
+use WebshopNL\Connect\Service\ProductData\ParentUrlMode;
 
 /**
  * A Commerce catalogue after a scheduled update: every product's row_id differs from its entity_id.
@@ -59,6 +60,24 @@ class CollectorTest extends TestCase
         self::assertSame('Spareribs baby back ribs', $result[self::VARIANT]['parent_title']);
         self::assertSame('From the configurable', $result[self::VARIANT]['description']);
         self::assertSame('https://shop/spareribs.html#93=50', $result[self::VARIANT]['url']);
+    }
+
+    public function testThePlainModeLeavesTheAttributeHashOff(): void
+    {
+        // The admin offers No, Yes and "Yes, with Auto-Link"; the hash belongs to the last one.
+        // Read as a bare number the collector put it on "Yes" and left it off "with Auto-Link",
+        // so 1847 links carried a hash nobody asked for and the recommended setting carried none.
+        $result = $this->collector()->execute(
+            [self::VARIANT, self::BUNDLE],
+            [],
+            $this->parameters(
+                feedIds: [self::VARIANT, self::BUNDLE, self::CONFIGURABLE],
+                parentUrl: ParentUrlMode::Plain
+            ),
+            1
+        );
+
+        self::assertSame('https://shop/spareribs.html', $result[self::VARIANT]['url']);
     }
 
     public function testEveryLookupIsMadeByEntityIdNotRowId(): void
@@ -112,7 +131,7 @@ class CollectorTest extends TestCase
      * @param int[]|null $feedIds
      * @return array<string, mixed>
      */
-    private function parameters(?array $feedIds = null): array
+    private function parameters(?array $feedIds = null, ParentUrlMode $parentUrl = ParentUrlMode::AutoLink): array
     {
         $silent = [
             'use' => '',
@@ -131,7 +150,7 @@ class CollectorTest extends TestCase
                 'configurable' => [
                     'use' => 'simple',
                     'use_parent_attributes' => ['description'],
-                    'use_parent_url' => 1,
+                    'use_parent_url' => $parentUrl->value,
                     'use_parent_images' => 0,
                 ],
                 'bundle' => ['use' => 'parent'] + $silent,

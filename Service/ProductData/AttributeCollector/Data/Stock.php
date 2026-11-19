@@ -70,13 +70,18 @@ class Stock extends AbstractDataCollector
             // left every product after the first one reading an int offset, so only the first
             // had its reservations subtracted and the rest published a salable_qty that was too
             // high by exactly the reserved amount.
-            $reserved = max((int)($reservations[$value['product_id']] ?? 0), 0);
+            //
+            // Magento books a reservation for a placed order as a negative quantity, and derives
+            // the salable quantity by adding it. Clamping it at zero first and then subtracting
+            // threw every real reservation away, so salable_qty always came out equal to qty: a
+            // product with ten in stock and eight sold was published as ten.
+            $reserved = (int)($reservations[$value['product_id']] ?? 0);
 
             $result[$value['product_id']]['qty'] = $quantity;
             $result[$value['product_id']]['is_salable'] = $value['is_salable'] ?? 0;
             $result[$value['product_id']]['availability'] = $value['is_salable'] ?? 0;
             $result[$value['product_id']]['is_in_stock'] = $value['is_salable'] ?? 0;
-            $result[$value['product_id']]['salable_qty'] = $quantity - $reserved;
+            $result[$value['product_id']]['salable_qty'] = max($quantity + $reserved, 0);
         }
 
         if ($allChannels) {
@@ -108,14 +113,14 @@ class Stock extends AbstractDataCollector
                 }
 
                 $quantity = (int)($value['quantity'] ?? 0);
-                $reserved = max((int)($reservations[$productId] ?? 0), 0);
+                $reserved = (int)($reservations[$productId] ?? 0);
                 $salable = $value['is_salable'] ?? 0;
 
                 $result[$productId]['msi'][$stockId] = [
                     'qty' => $quantity,
                     'availability' => $salable,
                     'is_salable' => $salable,
-                    'salable_qty' => $quantity - $reserved,
+                    'salable_qty' => max($quantity + $reserved, 0),
                     'own_channel' => $stockId === $ownStockId,
                 ];
             }

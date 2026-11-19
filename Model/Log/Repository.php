@@ -111,7 +111,7 @@ class Repository implements LogRepositoryInterface
             $stream = $this->file->fileOpen($path, 'r');
             $lines = [];
             while (!$this->file->endOfFile($stream)) {
-                $line = $this->file->fileReadLine($stream, 8192);
+                $line = $this->file->fileReadLine($stream, 8192, "\n");
                 if (trim((string)$line) !== '') {
                     $lines[] = $line;
                 }

@@ -220,7 +220,7 @@ class Collector
         ];
 
         foreach (['configurable', 'grouped', 'bundle'] as $type) {
-            if ($extraParameters['behaviour'][$type]['use_parent_url']) {
+            if ($this->parentUrlMode($extraParameters['behaviour'][$type]['use_parent_url'])->usesParentUrl()) {
                 $parentAttributes[$type][] = self::ATTR_URL;
             }
             if ($extraParameters['behaviour'][$type]['use_parent_images']) {
@@ -260,7 +260,8 @@ class Collector
         // once, in ChildSelection; this method only wires up what a child inherits.
         $behaviour = $extraParameters['behaviour'][$parentType];
 
-        if (!$behaviour['use_parent_attributes'] && !$behaviour['use_parent_url'] && !$behaviour['use_parent_images']) {
+        $usesParentUrl = $this->parentUrlMode($behaviour['use_parent_url'])->usesParentUrl();
+        if (!$behaviour['use_parent_attributes'] && !$usesParentUrl && !$behaviour['use_parent_images']) {
             return;
         }
 
@@ -353,6 +354,10 @@ class Collector
      * Only when the child has nothing: a child that does have a rewrite keeps its own page, and
      * "Use Parent Data for Simples" stays what it is, a choice about children that do.
      *
+     * The parent's link is taken even when it is the id pattern as well, which is what a store
+     * view without rewrites gives it. That link resolves: a parent is visible on its own, which
+     * is exactly why its children are not.
+     *
      * @param array<int, array> &$data
      * @param int $productId
      * @param int $parentId
@@ -372,7 +377,7 @@ class Collector
             return;
         }
 
-        if (!empty($data[$parentId]['url_is_fallback']) || !isset($data[$parentId][self::ATTR_URL])) {
+        if (!isset($data[$parentId][self::ATTR_URL])) {
             return;
         }
 
@@ -380,6 +385,17 @@ class Collector
         unset($data[$productId]['url_is_fallback']);
 
         $this->appendConfigKeyUrl($data, $productId, $parentId, $configKeys, $extraParameters, $storeId);
+    }
+
+    /**
+     * Read the stored option as what it means, falling back on No for anything unknown.
+     *
+     * @param mixed $value
+     * @return ParentUrlMode
+     */
+    private function parentUrlMode($value): ParentUrlMode
+    {
+        return ParentUrlMode::tryFrom((int)$value) ?? ParentUrlMode::No;
     }
 
     /**
@@ -493,7 +509,8 @@ class Collector
         int $storeId
     ): void {
         $parentType = $data[$parentId]['type_id'] ?? '';
-        if (($extraParameters['behaviour'][$parentType]['use_parent_url'] ?? 0) == 1) {
+        $mode = $this->parentUrlMode($extraParameters['behaviour'][$parentType]['use_parent_url'] ?? 0);
+        if ($mode === ParentUrlMode::AutoLink) {
             $suffix = $this->getConfigKeySuffix($configKeys, $productId, $parentId, $storeId);
             if ($suffix !== null) {
                 $data[$productId][self::ATTR_URL] .= $suffix;

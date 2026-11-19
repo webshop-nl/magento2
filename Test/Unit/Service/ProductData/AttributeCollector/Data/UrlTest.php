@@ -41,10 +41,52 @@ class UrlTest extends TestCase
         self::assertSame('https://shop.test/catalog/product/view/id/37', $links[37]);
     }
 
+    public function testTheIdsWithoutARewriteAreReported(): void
+    {
+        $collector = $this->collector();
+        $collector->execute([36, 37], 'product', $this->store(true), [36, 37]);
+
+        // 36 has a rewrite, 37 falls back on the id pattern. That pattern only resolves for a
+        // product visible on its own, so the caller has to know which links are not real ones.
+        self::assertSame([37], $collector->getIdsWithoutRewrite());
+    }
+
+    public function testTheReportIsPerRunAndNotCumulative(): void
+    {
+        $collector = $this->collector();
+        $collector->execute([36, 37], 'product', $this->store(true), [36, 37]);
+        $collector->execute([36], 'product', $this->store(true), [36]);
+
+        self::assertSame([], $collector->getIdsWithoutRewrite(), 'the second run had nothing to report');
+    }
+
     /**
      * @return array<int, string>
      */
     private function collect(bool $useStoreInUrl): array
+    {
+        return $this->collector()->execute([36, 37], 'product', $this->store($useStoreInUrl), [36, 37]);
+    }
+
+    /**
+     * @param bool $useStoreInUrl
+     * @return Store
+     */
+    private function store(bool $useStoreInUrl): Store
+    {
+        $store = $this->createMock(Store::class);
+        $store->method('getId')->willReturn(2);
+        $store->method('getCode')->willReturn('hyva_nl');
+        $store->method('isUseStoreInUrl')->willReturn($useStoreInUrl);
+        $store->method('getBaseUrl')->with(UrlInterface::URL_TYPE_WEB)->willReturn('https://shop.test/');
+
+        return $store;
+    }
+
+    /**
+     * @return Url
+     */
+    private function collector(): Url
     {
         $select = $this->createMock(Select::class);
         foreach (['from', 'join', 'where'] as $method) {
@@ -59,12 +101,6 @@ class UrlTest extends TestCase
         $resource->method('getConnection')->willReturn($connection);
         $resource->method('getTableName')->willReturnArgument(0);
 
-        $store = $this->createMock(Store::class);
-        $store->method('getId')->willReturn(2);
-        $store->method('getCode')->willReturn('hyva_nl');
-        $store->method('isUseStoreInUrl')->willReturn($useStoreInUrl);
-        $store->method('getBaseUrl')->with(UrlInterface::URL_TYPE_WEB)->willReturn('https://shop.test/');
-
         $collector = (new ReflectionClass(Url::class))->newInstanceWithoutConstructor();
         foreach (['resource' => $resource, 'linkField' => 'entity_id'] as $property => $value) {
             $reflection = new \ReflectionProperty(
@@ -76,6 +112,6 @@ class UrlTest extends TestCase
             $reflection->setValue($collector, $value);
         }
 
-        return $collector->execute([36, 37], 'product', $store, [36, 37]);
+        return $collector;
     }
 }
