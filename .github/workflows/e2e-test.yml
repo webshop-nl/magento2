@@ -55,7 +55,7 @@ jobs:
             MAGENTO_VERSION: 2.4.7-p3
           - PHP_VERSION: php85-fpm
             MAGENTO_VERSION: 2.4.9
-    # The self-hosted runner when the repository names one in E2E_RUNNER, GitHub's otherwise.
+    # A runner of the repository's own when it names one in E2E_RUNNER, GitHub's otherwise.
     # The fallback is pinned on purpose: ubuntu-latest moved to a release Playwright has no
     # Chromium build for.
     runs-on: ${{ vars.E2E_RUNNER || 'ubuntu-24.04' }}
