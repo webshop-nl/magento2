@@ -10,6 +10,7 @@ namespace WebshopNL\Connect\Model\Webapi;
 use Magento\Framework\Api\SearchCriteriaBuilder;
 use Magento\Framework\App\Config\Storage\WriterInterface;
 use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Framework\Webapi\Exception as WebapiException;
 use Magento\Framework\Filesystem\Driver\File;
 use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
 use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
@@ -220,7 +221,12 @@ class Order implements OrderInterface
         try {
             $order = $this->magentoOrderRepository->get($orderId);
         } catch (NoSuchEntityException $exception) {
-            return [sprintf(self::NO_ORDER_EXIST_EXCEPTION, $orderId)];
+            $errorMessage = sprintf(self::NO_ORDER_EXIST_EXCEPTION, $orderId);
+            throw new WebapiException(
+                __($errorMessage),
+                0,
+                WebapiException::HTTP_BAD_REQUEST
+            );
         }
 
         return [

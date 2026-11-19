@@ -71,6 +71,10 @@ class FeedRepository extends BaseRepository implements FeedInterface
             $attributes += ['delivery_time' => $this->getDeliveryAttribute($storeId)];
         }
 
+        if ($this->isVatPctEnabled($storeId) && $this->getVatPctSource($storeId) == 'attribute') {
+            $attributes += ['vat_pct' => $this->getVatPctAttribute($storeId)];
+        }
+
         return $attributes;
     }
 
@@ -281,6 +285,10 @@ class FeedRepository extends BaseRepository implements FeedInterface
             $staticFields['delivery_time']['is_in_stock != 1'] = $this->getDeliveryOutOfStock($storeId);
         }
 
+        if ($this->isVatPctEnabled($storeId) && $this->getVatPctSource($storeId) == 'static') {
+            $staticFields['vat_pct'] = $this->getVatPctStatic($storeId);
+        }
+
         return $staticFields;
     }
 
@@ -353,6 +361,55 @@ class FeedRepository extends BaseRepository implements FeedInterface
     }
 
     /**
+     * Check if VAT percentage is enabled
+     *
+     * @param int $storeId
+     *
+     * @return bool
+     */
+    public function isVatPctEnabled(int $storeId): bool
+    {
+        return $this->isSetFlag(self::XPATH_VAT_PCT_ENABLED, $storeId);
+    }
+
+    /**
+     * Get source for 'vat_pct' feed entity
+     *
+     * @param int $storeId
+     *
+     * @return string
+     * @see \WebshopNL\Connect\Model\Config\System\Source\SourceType
+     */
+    private function getVatPctSource(int $storeId): string
+    {
+        return $this->getStoreValue(self::XPATH_VAT_PCT_SOURCE, $storeId);
+    }
+
+    /**
+     * Get attribute for 'vat_pct'
+     *
+     * @param int $storeId
+     *
+     * @return string
+     */
+    private function getVatPctAttribute(int $storeId): string
+    {
+        return $this->getStoreValue(self::XPATH_VAT_PCT_ATTRIBUTE, $storeId);
+    }
+
+    /**
+     * Get static value for 'vat_pct'
+     *
+     * @param int $storeId
+     *
+     * @return string
+     */
+    private function getVatPctStatic(int $storeId): string
+    {
+        return $this->getStoreValue(self::XPATH_VAT_PCT_STATIC, $storeId);
+    }
+
+        /**
      * @inheritDoc
      */
     public function getFilters(int $storeId): array

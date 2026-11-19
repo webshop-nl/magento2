@@ -39,6 +39,10 @@ interface FeedInterface
     public const XPATH_DELIVERY_ATTRIBUTE = 'webshopnl/feed/delivery_attribute';
     public const XPATH_DELIVERY_IN_STOCK = 'webshopnl/feed/delivery_in_stock';
     public const XPATH_DELIVERY_OUT_OF_STOCK = 'webshopnl/feed/delivery_out_of_stock';
+    public const XPATH_VAT_PCT_ENABLED = 'webshopnl/feed/vat_pct_enabled';
+    public const XPATH_VAT_PCT_SOURCE = 'webshopnl/feed/vat_pct_source';
+    public const XPATH_VAT_PCT_ATTRIBUTE = 'webshopnl/feed/vat_pct_attribute';
+    public const XPATH_VAT_PCT_STATIC = 'webshopnl/feed/vat_pct_static';
 
     /** Product Types Group */
     public const XML_PATH_CONFIGURABLE = 'webshopnl/feed/configurable';

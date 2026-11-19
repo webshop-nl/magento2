@@ -61,11 +61,11 @@ class Create
         foreach ($data as $key => $value) {
 
             if (!is_array($value)) {
-                $jsonStr .= sprintf(self::JSON_FORMAT_FULL, $key, $value);
+                $jsonStr .= sprintf(self::JSON_FORMAT_FULL, $key, $this->escapeJsonValue($value));
             } else {
                 $jsonStr .= sprintf(self::JSON_FORMAT_OPENED, $key);
                 foreach ($value as $nestedKey => $nestedValue) {
-                    $jsonStr .= sprintf(self::JSON_FORMAT_FULL, $nestedKey, $nestedValue);
+                    $jsonStr .= sprintf(self::JSON_FORMAT_FULL, $nestedKey, $this->escapeJsonValue($nestedValue));
                 }
                 $jsonStr = rtrim($jsonStr, ','); //remove last comma
                 $jsonStr .= '},';
@@ -73,5 +73,15 @@ class Create
         }
         $jsonStr = rtrim($jsonStr, ','); //remove last comma
         return $jsonStr;
+    }
+
+    /**
+     * @param mixed $value
+     * @return string
+     */
+    private function escapeJsonValue($value): string
+    {
+        $encoded = json_encode((string)$value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        return substr($encoded, 1, -1);
     }
 }

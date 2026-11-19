@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace WebshopNL\Connect\Service\Order;
 
 use Exception;
+use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\QuoteManagement;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
@@ -37,6 +38,10 @@ class Import
      */
     private $orderRepository;
     /**
+     * @var CartRepositoryInterface
+     */
+    private $cartRepository;
+    /**
      * @var Items\Add
      */
     private $addItems;
@@ -57,6 +62,7 @@ class Import
      * @param StoreManagerInterface $storeManager
      * @param QuoteManagement $quoteManagement
      * @param OrderRepositoryInterface $orderRepository
+     * @param CartRepositoryInterface $cartRepository
      * @param Items\Add $addItems
      * @param Quote\Create $createQuote
      * @param Shipping\SetMethod $setShippingMethod
@@ -66,6 +72,7 @@ class Import
         StoreManagerInterface $storeManager,
         QuoteManagement $quoteManagement,
         OrderRepositoryInterface $orderRepository,
+        CartRepositoryInterface $cartRepository,
         Items\Add $addItems,
         Quote\Create $createQuote,
         Shipping\SetMethod $setShippingMethod,
@@ -74,6 +81,7 @@ class Import
         $this->storeManager = $storeManager;
         $this->quoteManagement = $quoteManagement;
         $this->orderRepository = $orderRepository;
+        $this->cartRepository = $cartRepository;
         $this->addItems = $addItems;
         $this->createQuote = $createQuote;
         $this->setShippingMethod = $setShippingMethod;
@@ -106,7 +114,7 @@ class Import
             $quote->setTotals($totals);
             $quote->collectTotals();
             $quote->setTotalsCollectedFlag(false)->collectTotals();
-            $quote->save();
+            $this->cartRepository->save($quote);
             $order = $this->quoteManagement->submit($quote);
 
             $order->setData('webshopnl_order_id', $orderData['order_id']);
