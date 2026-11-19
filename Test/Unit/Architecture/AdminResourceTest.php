@@ -28,6 +28,7 @@ class AdminResourceTest extends TestCase
      * with its own grid adds its view/process resources here; the config endpoints stay on CONFIG.
      */
     private const EXPECTED = [
+        'Feed\\Download' => self::CONFIG,
         'Feed\\Generate' => self::CONFIG,
         'Feed\\Preview' => self::CONFIG,
         'Log\\Stream' => self::CONFIG,
