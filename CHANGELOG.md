@@ -30,6 +30,7 @@
 * The order import has its own Enable under Orders; that setting switched the whole module, so turning the import off also stopped the feed.
 * Registration opens the Webshop.nl partner portal; new installations pointed at the development portal instead.
 * The module installs and upgrades on Magento 2.4.9.
+* Installing the module together with Magento no longer leaves the shop without its website; configuration read before the first store view exists now falls back to the default scope.
 * The shop's REST schema can be generated again with the module installed.
 * The feed no longer refers to attributes this module does not create; the category path is the Magento one.
 
