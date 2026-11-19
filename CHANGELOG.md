@@ -12,7 +12,9 @@
 * Added documentation for the feed command.
 
 **Bugfixes:**
-* Every product in the feed carries a link; variants of configurable and bundle products were published without one.
+* Every product in the feed carries a link that opens: a variant has no page of its own, so it is published on the page of its parent, where it can be bought.
+* The feed can be downloaded from the Feeds overview; the button led to a page that does not exist.
+* The generation time is shown in the timezone of the store, instead of UTC.
 * A shop with more than one store view gets a feed for every store view, not only the first.
 * The scheduled feed run works, and a custom schedule is kept as entered.
 * Disabled products stay out of the feed, and "Exclude out of stock products" filters on stock.
