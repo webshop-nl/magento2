@@ -124,6 +124,15 @@ class Data
             }
             $data[$productId]['url'] = $url;
         }
+
+        // Marked rather than detected later from the shape of the URL: the collector is the only
+        // place that knows a rewrite was missing, and the id pattern it falls back on is a link
+        // that 404s for every product that is not visible on its own.
+        foreach ($this->url->getIdsWithoutRewrite() as $productId) {
+            if (isset($data[$productId])) {
+                $data[$productId]['url_is_fallback'] = true;
+            }
+        }
     }
 
     /**

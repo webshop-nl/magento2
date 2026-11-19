@@ -37,12 +37,20 @@ class Url extends AbstractDataCollector
     private string $type;
     private StoreInterface $store;
 
+    /**
+     * Ids that had no URL rewrite of their own and fell back on the id pattern, per execute().
+     *
+     * @var int[]
+     */
+    private array $withoutRewrite = [];
+
     public function execute(array $entityIds, string $type, StoreInterface $store, ?array $productIds = null): array
     {
         $this->entityIds = $entityIds;
         $this->store = $store;
         $this->productIds = $productIds ?? [];
         $this->type = $type;
+        $this->withoutRewrite = [];
 
         return $this->collectUrl();
     }
@@ -97,6 +105,7 @@ class Url extends AbstractDataCollector
         if ($this->type === 'product') {
             foreach ($this->productIds as $productId) {
                 if (!array_key_exists($productId, $result)) {
+                    $this->withoutRewrite[] = (int)$productId;
                     $result[$productId] = sprintf(
                         self::URL_PATTERN_EXTRA[$this->type],
                         $storeUrl,
@@ -117,5 +126,18 @@ class Url extends AbstractDataCollector
         }
 
         return $result;
+    }
+
+    /**
+     * The ids of the last execute() that had no URL rewrite and so carry the id pattern.
+     *
+     * That pattern only resolves for a product that is visible on its own. A variant is not, so
+     * its link answers 404, and the caller has to put the parent's URL there instead.
+     *
+     * @return int[]
+     */
+    public function getIdsWithoutRewrite(): array
+    {
+        return $this->withoutRewrite;
     }
 }

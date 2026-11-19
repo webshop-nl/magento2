@@ -306,6 +306,14 @@ class Collector
                 if ($parentId !== null && isset($data[$parentId])) {
                     $data[$productId]['parent_id'] = $parentId;
                     $data[$productId]['parent_title'] = $data[$parentId]['title'] ?? null;
+                    $this->inheritUrlWithoutRewrite(
+                        $data,
+                        $productId,
+                        $parentId,
+                        $configKeys,
+                        $extraParameters,
+                        $storeId
+                    );
                 }
             }
 
@@ -333,6 +341,45 @@ class Collector
             $this->setImageLogic($data, $productId, $extraParameters);
             $this->setCategoryLogic($data, $productId, $extraParameters);
         }
+    }
+
+    /**
+     * Give a child the parent's URL when it has none of its own.
+     *
+     * Without a rewrite the URL collector falls back on catalog/product/view/id/<id>, and that
+     * page does not exist for a product that is not visible on its own: the link answers 404.
+     * A variant is in the feed to be bought through its parent, so that is where it points.
+     *
+     * Only when the child has nothing: a child that does have a rewrite keeps its own page, and
+     * "Use Parent Data for Simples" stays what it is, a choice about children that do.
+     *
+     * @param array<int, array> &$data
+     * @param int $productId
+     * @param int $parentId
+     * @param array $configKeys
+     * @param array $extraParameters
+     * @param int $storeId
+     */
+    private function inheritUrlWithoutRewrite(
+        array &$data,
+        int $productId,
+        int $parentId,
+        array $configKeys,
+        array $extraParameters,
+        int $storeId
+    ): void {
+        if (empty($data[$productId]['url_is_fallback'])) {
+            return;
+        }
+
+        if (!empty($data[$parentId]['url_is_fallback']) || !isset($data[$parentId][self::ATTR_URL])) {
+            return;
+        }
+
+        $data[$productId][self::ATTR_URL] = $data[$parentId][self::ATTR_URL];
+        unset($data[$productId]['url_is_fallback']);
+
+        $this->appendConfigKeyUrl($data, $productId, $parentId, $configKeys, $extraParameters, $storeId);
     }
 
     /**
