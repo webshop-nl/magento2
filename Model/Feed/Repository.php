@@ -10,7 +10,7 @@ namespace WebshopNL\Connect\Model\Feed;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Exception\FileSystemException;
 use Magento\Framework\Filesystem\Driver\File;
-use Magento\Framework\Stdlib\DateTime\DateTime;
+use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
 use Magento\Framework\UrlInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -35,9 +35,9 @@ class Repository implements FeedRepository
      */
     private $configRepository;
     /**
-     * @var DateTime
+     * @var TimezoneInterface
      */
-    private $datetime;
+    private $timezone;
     /**
      * @var FeedService
      */
@@ -67,7 +67,7 @@ class Repository implements FeedRepository
      * Feed constructor.
      *
      * @param StoreManagerInterface $storeManager
-     * @param DateTime $datetime
+     * @param TimezoneInterface $timezone
      * @param ConfigRepository $configRepository
      * @param FeedService $feedService
      * @param LogRepository $logRepository
@@ -78,7 +78,7 @@ class Repository implements FeedRepository
      */
     public function __construct(
         StoreManagerInterface $storeManager,
-        DateTime $datetime,
+        TimezoneInterface $timezone,
         ConfigRepository $configRepository,
         FeedService $feedService,
         LogRepository $logRepository,
@@ -88,7 +88,7 @@ class Repository implements FeedRepository
         File $fileDriver
     ) {
         $this->configRepository = $configRepository;
-        $this->datetime = $datetime;
+        $this->timezone = $timezone;
         $this->storeManager = $storeManager;
         $this->feedService = $feedService;
         $this->logRepository = $logRepository;
@@ -239,7 +239,7 @@ class Repository implements FeedRepository
             'Products in feed: %s, generated in %s on %s (%s)',
             count($feed['productFeed']),
             $this->getTimeUsage($timeStart),
-            $this->datetime->gmtDate(),
+            $this->timezone->date()->format('Y-m-d H:i:s'),
             $type
         );
 
