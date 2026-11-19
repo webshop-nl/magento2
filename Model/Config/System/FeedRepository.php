@@ -725,9 +725,9 @@ class FeedRepository extends BaseRepository implements FeedInterface
         $filename = $this->getStoreValue(self::XPATH_FEED_FILENAME, $storeId);
 
         return str_replace(
-            '.xml',
-            sprintf('-%s.xml', $storeId),
-            !empty($filename) ? $filename : 'webshopnl.xml'
+            '.ndjson',
+            sprintf('-%s.ndjson', $storeId),
+            !empty($filename) ? $filename : 'webshopnl.ndjson'
         );
     }
 }

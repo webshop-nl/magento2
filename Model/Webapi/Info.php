@@ -62,6 +62,7 @@ class Info implements InfoInterface
                 'enabled' => $this->configRepository->isEnabled(),
                 'module_version' => $this->configRepository->getExtensionVersion(),
                 'magento_version' => $this->configRepository->getMagentoVersion(),
+                'installation_id' => $this->configRepository->getInstallationId(),
                 'feed_url' => $this->getFeedUrls(),
                 'order_post_url' => $this->getStoreUrl() . '/V1/webshopnl/order',
                 'last_order_import' => $this->configRepository->getLastOrderImport(),
