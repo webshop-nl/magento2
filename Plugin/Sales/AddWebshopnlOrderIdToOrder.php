@@ -3,6 +3,7 @@
  * Copyright Magmodules.eu. All rights reserved.
  * See COPYING.txt for license details.
  */
+declare(strict_types=1);
 
 namespace WebshopNL\Connect\Plugin\Sales;
 
@@ -10,6 +11,7 @@ use Magento\Sales\Api\Data\OrderExtensionFactory;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\Data\OrderSearchResultInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
+use Magento\Sales\Model\Order;
 
 /**
  * Class AddWebshopnlOrderIdToOrder
@@ -52,6 +54,11 @@ class AddWebshopnlOrderIdToOrder
      */
     private function addWebshopnlOrderIdToOrder(OrderInterface $entity)
     {
+        // The column is read straight off the row, which only the order model exposes.
+        if (!$entity instanceof Order) {
+            return;
+        }
+
         $extensionAttributes = $this->getExtensionAttributes($entity);
         $extensionAttributes->setWebshopnlOrderId($entity->getData('webshopnl_order_id'));
         $entity->setExtensionAttributes($extensionAttributes);

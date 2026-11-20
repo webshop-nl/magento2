@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<!--
+  ~ Copyright © Magmodules.eu. All rights reserved.
+  ~ See COPYING.txt for license details.
+  -->
+<ruleset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="WebshopNL" xsi:noNamespaceSchemaLocation="phpcs.xsd">
+    <description>Magento 2 coding standard for the WebshopNL Connect module.</description>
+
+    <!-- CI helper scripts (E2E fixtures, setup scripts) are not shipped and may echo and exit. -->
+    <exclude-pattern>*/.github/*</exclude-pattern>
+    <exclude-pattern>*/Test/*</exclude-pattern>
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+    <exclude-pattern>*/node_modules/*</exclude-pattern>
+
+    <rule ref="Magento2">
+        <exclude name="Magento2.Annotation.MethodAnnotationStructure.NoCommentBlock"/>
+    </rule>
+
+    <!-- A plugin that repeats an untyped parent constructor with its own types is how dependency
+         injection learns what to inject; the sniff reads it as a useless override. -->
+    <rule ref="Generic.CodeAnalysis.UselessOverridingMethod">
+        <exclude-pattern>*/Plugin/*</exclude-pattern>
+    </rule>
+
+    <!-- A translation key has to sit on one source line to be extracted, so a sentence in a
+         template cannot be wrapped to fit the line limit. -->
+    <rule ref="Generic.Files.LineLength">
+        <exclude-pattern>*.phtml</exclude-pattern>
+    </rule>
+
+    <rule ref="Generic.PHP.RequireStrictTypes">
+        <severity>9</severity>
+        <exclude-pattern>*.phtml</exclude-pattern>
+        <exclude-pattern>registration.php</exclude-pattern>
+    </rule>
+</ruleset>

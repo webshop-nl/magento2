@@ -44,7 +44,7 @@ class Header extends Field
      */
     private $integration;
 
-    private $storeManager;
+    private StoreManagerInterface $storeManager;
 
     /**
      * Header constructor.
@@ -127,7 +127,7 @@ class Header extends Field
      */
     private function getEncodedStoreData(): string
     {
-        return base64_encode($this->json->serialize([
+        return base64_encode((string)$this->json->serialize([
             'type' => 'magento',
             'installation_id' => $this->configRepository->getInstallationId(),
             'token' => $this->integration->getToken(),
@@ -157,7 +157,7 @@ class Header extends Field
      */
     private function getStreet($address): string
     {
-        return trim(preg_replace('/[0-9]+/', '', (string)$address));
+        return trim((string)preg_replace('/[0-9]+/', '', (string)$address));
     }
 
     /**

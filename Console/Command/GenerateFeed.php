@@ -51,7 +51,7 @@ class GenerateFeed extends Command
     /**
      * @inheritdoc
      */
-    public function configure()
+    public function configure(): void
     {
         $this->setName(self::COMMAND_NAME);
         $this->setDescription('Generate Product Feed');

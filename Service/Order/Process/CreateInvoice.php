@@ -77,6 +77,13 @@ class CreateInvoice
      */
     public function execute(OrderInterface $order)
     {
+        // canInvoice(), prepareInvoice() and the transaction all want the concrete order model;
+        // the interface knows none of them. Magento hands out that model everywhere, so this only
+        // leaves the method when something else put a bare implementation in front of it.
+        if (!$order instanceof Order) {
+            return;
+        }
+
         if ($order->canInvoice()) {
             $invoice = $this->invoiceService->prepareInvoice($order);
             $invoice->setRequestedCaptureCase(Invoice::CAPTURE_OFFLINE);

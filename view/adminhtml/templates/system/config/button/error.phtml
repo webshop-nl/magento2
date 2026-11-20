@@ -1,0 +1,19 @@
+<?php
+/**
+ * Copyright © Magmodules.eu. All rights reserved.
+ * See COPYING.txt for license details.
+ *
+ * @var WebshopNL\Connect\Block\Adminhtml\System\Config\Button\ErrorCheck $block
+ */
+?>
+<div id="webshopnl-result_error-modal"
+     data-webshopnl-endpoint-url="<?= $block->escapeUrl($block->getErrorCheckUrl()); ?>">
+    <div id="webshopnl-result_error">
+        <div class="result"></div>
+    </div>
+</div>
+
+<button id="webshopnl-button_error" type="button" class="action-default scalable">
+    <i class="webshopnl-icon__question-circled"></i>
+    <span><?= $block->escapeHtml(__('Error Log')); ?></span>
+</button>

@@ -16,6 +16,13 @@ class FeedRepository extends BaseRepository implements FeedInterface
 {
 
     /**
+     * Products per collector run, and the ceiling a preview stops at. Both were literals in the
+     * repository that drove the collector before this release.
+     */
+    private const BATCH_SIZE = 10000;
+    private const PREVIEW_SIZE = 250;
+
+    /**
      * @inheritDoc
      */
     public function getAllEnabledStoreIds(): array
@@ -33,7 +40,7 @@ class FeedRepository extends BaseRepository implements FeedInterface
     /**
      * @inheritDoc
      */
-    public function isFeedEnabled(int $storeId = null): bool
+    public function isFeedEnabled(?int $storeId = null): bool
     {
         return $this->isSetFlag(self::XPATH_FEED_ENABLED, $storeId);
     }
@@ -49,7 +56,7 @@ class FeedRepository extends BaseRepository implements FeedInterface
     /**
      * @inheritDoc
      */
-    public function getAttributes(int $storeId = null): array
+    public function getAttributes(int $storeId): array
     {
         $attributes = [
             'name' => $this->getNameAttribute($storeId),
@@ -69,6 +76,10 @@ class FeedRepository extends BaseRepository implements FeedInterface
 
         if ($this->getDeliverySource($storeId) == 'attribute') {
             $attributes += ['delivery_time' => $this->getDeliveryAttribute($storeId)];
+        }
+
+        if ($this->isVatPctEnabled($storeId) && $this->getVatPctSource($storeId) == 'attribute') {
+            $attributes += ['vat_pct' => $this->getVatPctAttribute($storeId)];
         }
 
         return $attributes;
@@ -193,7 +204,7 @@ class FeedRepository extends BaseRepository implements FeedInterface
     /**
      * @inheritDoc
      */
-    public function getCategoryAttribute(int $storeId = null): ?string
+    private function getCategoryAttribute(?int $storeId = null): string
     {
         return $this->getStoreValue(self::XPATH_CATEGORY_ATTRIBUTE, $storeId);
     }
@@ -256,7 +267,7 @@ class FeedRepository extends BaseRepository implements FeedInterface
     public function getStaticFields(int $storeId): array
     {
         $staticFields = [
-            'currency' => $this->getStore($storeId)->getCurrentCurrency()->getCode(),
+            'currency' => $this->getStore($storeId)?->getCurrentCurrency()->getCode(),
             'extra_info' => $this->getExtraInfo($storeId),
             'utm_string' => $this->getUtmString($storeId)
         ];
@@ -279,6 +290,10 @@ class FeedRepository extends BaseRepository implements FeedInterface
         if ($this->getDeliverySource($storeId) == 'static') {
             $staticFields['delivery_time']['is_in_stock == 1'] = $this->getDeliveryInStock($storeId);
             $staticFields['delivery_time']['is_in_stock != 1'] = $this->getDeliveryOutOfStock($storeId);
+        }
+
+        if ($this->isVatPctEnabled($storeId) && $this->getVatPctSource($storeId) == 'static') {
+            $staticFields['vat_pct'] = $this->getVatPctStatic($storeId);
         }
 
         return $staticFields;
@@ -353,6 +368,55 @@ class FeedRepository extends BaseRepository implements FeedInterface
     }
 
     /**
+     * Check if VAT percentage is enabled
+     *
+     * @param int $storeId
+     *
+     * @return bool
+     */
+    private function isVatPctEnabled(int $storeId): bool
+    {
+        return $this->isSetFlag(self::XPATH_VAT_PCT_ENABLED, $storeId);
+    }
+
+    /**
+     * Get source for 'vat_pct' feed entity
+     *
+     * @param int $storeId
+     *
+     * @return string
+     * @see \WebshopNL\Connect\Model\Config\System\Source\SourceType
+     */
+    private function getVatPctSource(int $storeId): string
+    {
+        return $this->getStoreValue(self::XPATH_VAT_PCT_SOURCE, $storeId);
+    }
+
+    /**
+     * Get attribute for 'vat_pct'
+     *
+     * @param int $storeId
+     *
+     * @return string
+     */
+    private function getVatPctAttribute(int $storeId): string
+    {
+        return $this->getStoreValue(self::XPATH_VAT_PCT_ATTRIBUTE, $storeId);
+    }
+
+    /**
+     * Get static value for 'vat_pct'
+     *
+     * @param int $storeId
+     *
+     * @return string
+     */
+    private function getVatPctStatic(int $storeId): string
+    {
+        return $this->getStoreValue(self::XPATH_VAT_PCT_STATIC, $storeId);
+    }
+
+        /**
      * @inheritDoc
      */
     public function getFilters(int $storeId): array
@@ -431,7 +495,23 @@ class FeedRepository extends BaseRepository implements FeedInterface
     }
 
     /**
-     * Exclude of out of stock products
+     * @inheritDoc
+     */
+    public function getBatchSize(): int
+    {
+        return self::BATCH_SIZE;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getPreviewSize(): int
+    {
+        return self::PREVIEW_SIZE;
+    }
+
+    /**
+     * Exclude out of stock products
      *
      * @param int $storeId
      *
@@ -449,7 +529,7 @@ class FeedRepository extends BaseRepository implements FeedInterface
      *
      * @return array
      */
-    public function getAdvancedFiltersData(int $storeId): array
+    private function getAdvancedFiltersData(int $storeId): array
     {
         if (!$this->isSetFlag(self::XML_PATH_FILTERS, $storeId)) {
             return [];
@@ -634,7 +714,7 @@ class FeedRepository extends BaseRepository implements FeedInterface
      * @return string
      * @see \WebshopNL\Connect\Model\Config\System\Source\Grouped\Options
      */
-    public function groupedProductLogic(int $storeId): string
+    private function groupedProductLogic(int $storeId): string
     {
         return $this->getStoreValue(self::XML_PATH_GROUPED, $storeId);
     }
@@ -646,7 +726,7 @@ class FeedRepository extends BaseRepository implements FeedInterface
      *
      * @return string
      */
-    public function groupedProductUrl(int $storeId): string
+    private function groupedProductUrl(int $storeId): string
     {
         return $this->getStoreValue(self::XML_PATH_GROUPED_LINK, $storeId);
     }
@@ -659,7 +739,7 @@ class FeedRepository extends BaseRepository implements FeedInterface
      * @return int
      * @see \WebshopNL\Connect\Model\Config\System\Source\Grouped\Image
      */
-    public function groupedProductImage(int $storeId): int
+    private function groupedProductImage(int $storeId): int
     {
         return (int)$this->getStoreValue(self::XML_PATH_GROUPED_IMAGE, $storeId);
     }
@@ -671,7 +751,7 @@ class FeedRepository extends BaseRepository implements FeedInterface
      *
      * @return array
      */
-    public function groupedParentAttributes(int $storeId): array
+    private function groupedParentAttributes(int $storeId): array
     {
         $attributes = $this->getStoreValue(self::XML_PATH_GROUPED_PARENT_ATTRIBUTES, $storeId);
         return $attributes ? explode(',', $attributes) : [];
@@ -684,7 +764,7 @@ class FeedRepository extends BaseRepository implements FeedInterface
      *
      * @return bool
      */
-    public function groupedNonVisibleFallback(int $storeId): bool
+    private function groupedNonVisibleFallback(int $storeId): bool
     {
         return $this->isSetFlag(self::XML_PATH_GROUPED_NON_VISIBLE, $storeId);
     }
@@ -720,7 +800,7 @@ class FeedRepository extends BaseRepository implements FeedInterface
     /**
      * @inheritDoc
      */
-    public function getFileName(int $storeId = null): string
+    public function getFileName(?int $storeId = null): string
     {
         $filename = $this->getStoreValue(self::XPATH_FEED_FILENAME, $storeId);
 

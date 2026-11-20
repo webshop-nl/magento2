@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace WebshopNL\Connect\Model\Config\System;
 
 use Magento\Tax\Model\Config as TaxConfig;
+use WebshopNL\Connect\Api\Config\RepositoryInterface as ConfigRepositoryInterface;
 use WebshopNL\Connect\Api\Config\System\OrderInterface;
 
 /**
@@ -19,15 +20,16 @@ class OrderRepository extends FeedRepository implements OrderInterface
     /**
      * @inheritDoc
      */
-    public function isOrderEnabled(int $storeId = null): bool
+    public function isOrderEnabled(?int $storeId = null): bool
     {
-        return $this->isSetFlag(self::XML_PATH_ORDER_ENABLE, $storeId);
+        return $this->isSetFlag(ConfigRepositoryInterface::XML_PATH_EXTENSION_ENABLE, $storeId)
+            && $this->isSetFlag(self::XML_PATH_ORDER_ENABLE, $storeId);
     }
 
     /**
      * @inheritDoc
      */
-    public function getDefaultShippingMethod(int $storeId = null): ?string
+    public function getDefaultShippingMethod(?int $storeId = null): ?string
     {
         return $this->getStoreValue(self::XML_PATH_SHIPPING_METHOD, $storeId);
     }
@@ -35,7 +37,7 @@ class OrderRepository extends FeedRepository implements OrderInterface
     /**
      * @inheritDoc
      */
-    public function getFallbackShippingMethod(int $storeId = null): ?string
+    public function getFallbackShippingMethod(?int $storeId = null): ?string
     {
         $fallback = $this->getStoreValue(self::XML_PATH_SHIPPING_METHOD_FALLBACK, $storeId);
         return !empty($fallback) ? $fallback : 'flatrate_flatrate';
@@ -44,7 +46,7 @@ class OrderRepository extends FeedRepository implements OrderInterface
     /**
      * @inheritDoc
      */
-    public function createCustomerOnImport(int $storeId = null): bool
+    public function createCustomerOnImport(?int $storeId = null): bool
     {
         return $this->isSetFlag(self::XML_PATH_IMPORT_CUSTOMER, $storeId);
     }
@@ -52,7 +54,7 @@ class OrderRepository extends FeedRepository implements OrderInterface
     /**
      * @inheritDoc
      */
-    public function customerGroupForOrderImport(int $storeId = null): ?string
+    public function customerGroupForOrderImport(?int $storeId = null): ?string
     {
         return $this->getStoreValue(self::XML_PATH_CUSTOMER_GROUP_ID, $storeId);
     }
@@ -60,7 +62,7 @@ class OrderRepository extends FeedRepository implements OrderInterface
     /**
      * @inheritDoc
      */
-    public function separateHouseNumber(int $storeId = null): bool
+    public function separateHouseNumber(?int $storeId = null): bool
     {
         return $this->isSetFlag(self::XML_PATH_SEPARATE_HOUSE_NUMBER, $storeId);
     }
@@ -76,7 +78,7 @@ class OrderRepository extends FeedRepository implements OrderInterface
     /**
      * @inheritDoc
      */
-    public function getNeedsTaxCalculation(string $type, int $storeId = null): bool
+    public function getNeedsTaxCalculation(string $type, ?int $storeId = null): bool
     {
         if ($type == 'shipping') {
             return $this->isSetFlag(TaxConfig::CONFIG_XML_PATH_SHIPPING_INCLUDES_TAX, (int)$storeId);
@@ -88,7 +90,7 @@ class OrderRepository extends FeedRepository implements OrderInterface
     /**
      * @inheritDoc
      */
-    public function getTaxClassShipping(int $storeId = null): string
+    public function getTaxClassShipping(?int $storeId = null): string
     {
         return (string)$this->getStoreValue(TaxConfig::CONFIG_XML_PATH_SHIPPING_TAX_CLASS, (int)$storeId);
     }
@@ -96,7 +98,7 @@ class OrderRepository extends FeedRepository implements OrderInterface
     /**
      * @inheritDoc
      */
-    public function sendOrderEmailOnImport(int $storeId = null): bool
+    public function sendOrderEmailOnImport(?int $storeId = null): bool
     {
         return $this->isSetFlag(self::XML_PATH_SEND_ORDER_EMAIL, $storeId);
     }
@@ -104,7 +106,7 @@ class OrderRepository extends FeedRepository implements OrderInterface
     /**
      * @inheritDoc
      */
-    public function sendInvoiceEmailOnImport(int $storeId = null): bool
+    public function sendInvoiceEmailOnImport(?int $storeId = null): bool
     {
         return $this->isSetFlag(self::XML_PATH_SEND_INVOICE, $storeId);
     }
@@ -112,7 +114,7 @@ class OrderRepository extends FeedRepository implements OrderInterface
     /**
      * @inheritDoc
      */
-    public function logOrderImport(int $storeId = null): bool
+    public function logOrderImport(?int $storeId = null): bool
     {
         return $this->isSetFlag(self::XML_PATH_LOG, $storeId);
     }

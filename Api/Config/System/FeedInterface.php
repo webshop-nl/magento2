@@ -17,7 +17,7 @@ interface FeedInterface
     public const XPATH_FEED_ENABLED = 'webshopnl/feed/enable';
     public const XPATH_FEED_FILENAME = 'webshopnl/feed/filename';
     public const XPATH_FEED_RESULT = 'webshopnl/feeds/results';
-    public const XPATH_CRON_FREQUENCY = 'webshopnl/feeds/cron_frequency';
+    public const XPATH_CRON_FREQUENCY = 'webshopnl/feed/cron_frequency';
 
     /** Product Data Group */
     public const XML_PATH_NAME_SOURCE = 'webshopnl/feed/name_attribute';
@@ -39,23 +39,27 @@ interface FeedInterface
     public const XPATH_DELIVERY_ATTRIBUTE = 'webshopnl/feed/delivery_attribute';
     public const XPATH_DELIVERY_IN_STOCK = 'webshopnl/feed/delivery_in_stock';
     public const XPATH_DELIVERY_OUT_OF_STOCK = 'webshopnl/feed/delivery_out_of_stock';
+    public const XPATH_VAT_PCT_ENABLED = 'webshopnl/feed/vat_pct_enabled';
+    public const XPATH_VAT_PCT_SOURCE = 'webshopnl/feed/vat_pct_source';
+    public const XPATH_VAT_PCT_ATTRIBUTE = 'webshopnl/feed/vat_pct_attribute';
+    public const XPATH_VAT_PCT_STATIC = 'webshopnl/feed/vat_pct_static';
 
     /** Product Types Group */
     public const XML_PATH_CONFIGURABLE = 'webshopnl/feed/configurable';
     public const XML_PATH_CONFIGURABLE_LINK = 'webshopnl/feed/configurable_link';
     public const XML_PATH_CONFIGURABLE_IMAGE = 'webshopnl/feed/configurable_image';
-    public const XML_PATH_CONFIGURABLE_PARENT_ATTRIBUTES = 'webshopnl/feed/configurable_parent_attributes';
+    public const XML_PATH_CONFIGURABLE_PARENT_ATTRIBUTES = 'webshopnl/feed/configurable_parent_atts';
     public const XML_PATH_CONFIGURABLE_NON_VISIBLE = 'webshopnl/feed/configurable_non_visible';
     public const XML_PATH_BUNDLE = 'webshopnl/feed/bundle';
     public const XML_PATH_BUNDLE_LINK = 'webshopnl/feed/bundle_link';
     public const XML_PATH_BUNDLE_IMAGE = 'webshopnl/feed/bundle_image';
-    public const XML_PATH_BUNDLE_PARENT_ATTRIBUTES = 'webshopnl/feed/bundle_parent_attributes';
+    public const XML_PATH_BUNDLE_PARENT_ATTRIBUTES = 'webshopnl/feed/bundle_parent_atts';
     public const XML_PATH_BUNDLE_NON_VISIBLE = 'webshopnl/feed/bundle_non_visible';
     public const XML_PATH_GROUPED = 'webshopnl/feed/grouped';
     public const XML_PATH_GROUPED_LINK = 'webshopnl/feed/grouped_link';
     public const XML_PATH_GROUPED_IMAGE = 'webshopnl/feed/grouped_image';
     public const XML_PATH_GROUPED_PARENT_PRICE = 'webshopnl/feed/grouped_parent_price';
-    public const XML_PATH_GROUPED_PARENT_ATTRIBUTES = 'webshopnl/feed/grouped_parent_attributes';
+    public const XML_PATH_GROUPED_PARENT_ATTRIBUTES = 'webshopnl/feed/grouped_parent_atts';
     public const XML_PATH_GROUPED_NON_VISIBLE = 'webshopnl/feed/grouped_non_visible';
 
     /** Additional Configuration Group */
@@ -80,7 +84,7 @@ interface FeedInterface
      *
      * @return bool
      */
-    public function isFeedEnabled(int $storeId = null): bool;
+    public function isFeedEnabled(?int $storeId = null): bool;
 
     /**
      * Return all enabled storeIds
@@ -201,10 +205,32 @@ interface FeedInterface
     public function setFeedGenerationResult(int $storeId, string $msg): void;
 
     /**
+     * Whether a product that is out of stock stays out of the feed
+     *
+     * @param int $storeId
+     * @return bool
+     */
+    public function excludeOutOfStock(int $storeId): bool;
+
+    /**
+     * How many products one collector run handles at a time
+     *
+     * @return int
+     */
+    public function getBatchSize(): int;
+
+    /**
+     * How many products a preview shows
+     *
+     * @return int
+     */
+    public function getPreviewSize(): int;
+
+    /**
      * Get filename of feed
      *
      * @param int|null $storeId
      * @return string
      */
-    public function getFileName(int $storeId = null): string;
+    public function getFileName(?int $storeId = null): string;
 }

@@ -14,12 +14,12 @@
             <label>Version</label>
             <config_path>webshopnl/general/version</config_path>
         </field>
-        <field id="enable" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+        <field id="enable" canRestore="1" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
             <label>Enabled</label>
             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
             <config_path>webshopnl/general/enable</config_path>
         </field>
-        <field id="mode" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+        <field id="mode" canRestore="1" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
             <label>Mode</label>
             <source_model>WebshopNL\Connect\Model\Config\Source\Mode</source_model>
             <config_path>webshopnl/general/mode</config_path>

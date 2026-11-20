@@ -196,46 +196,11 @@ class AddressHandler
             ->setTelephone($addressData['telephone']);
 
         if ($type == 'billing') {
-            $address->setIsDefaultBilling('1');
+            $address->setIsDefaultBilling(true);
         } else {
-            $address->setIsDefaultShipping('1');
+            $address->setIsDefaultShipping(true);
         }
 
         $this->addressRepository->save($address);
-    }
-
-    /**
-     * Format address lines based on 'separate house-number' and on the number of streert lines there are available.
-     * This number is configurable via 'customer/address/street_lines'.
-     *
-     * @param array $address
-     * @param int $storeId
-     *
-     * @return string
-     */
-    private function getStreet(array $address, int $storeId): string
-    {
-        $separateHouseNumber = $this->configProvider->separateHouseNumber((int)$storeId);
-        $numberOfStreetLines = $this->configProvider->getCustomerStreetLines((int)$storeId);
-
-        if ($separateHouseNumber || empty($address['address_line_1'])) {
-            $street[] = $address['street'];
-            $street[] = $address['house_number'];
-            $street[] = $address['house_number_ext'];
-        } else {
-            $street[] = $address['address_line_1'];
-            $street[] = $address['address_line_2'];
-            $street[] = null;
-        }
-
-        if ($numberOfStreetLines == 1) {
-            $street = [trim(implode(' ', $street))];
-        }
-
-        if ($numberOfStreetLines == 2) {
-            $street = [$street[0], trim($street[1] . ' ' . $street[2])];
-        }
-
-        return trim(implode("\n", $street));
     }
 }

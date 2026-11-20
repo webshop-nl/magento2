@@ -33,7 +33,7 @@ class Info implements InfoInterface
     /**
      * @var string
      */
-    private $storeUrl = '';
+    private ?string $storeUrl = null;
 
     /**
      * Info constructor.
@@ -64,7 +64,8 @@ class Info implements InfoInterface
                 'magento_version' => $this->configRepository->getMagentoVersion(),
                 'installation_id' => $this->configRepository->getInstallationId(),
                 'feed_url' => $this->getFeedUrls(),
-                'order_post_url' => $this->getStoreUrl() . '/V1/webshopnl/order',
+                'order_post_url' => $this->getStoreUrl() . 'rest/V1/webshopnl/order',
+                'order_status_url' => $this->getStoreUrl() . 'rest/V1/webshopnl/status',
                 'last_order_import' => $this->configRepository->getLastOrderImport(),
                 'active_stores' => $this->getActiveStores()
             ]

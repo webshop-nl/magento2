@@ -83,33 +83,44 @@ class BaseRepository
      *
      * @return bool
      */
-    protected function isSetFlag(string $path, int $storeId = null, string $scope = null): bool
+    protected function isSetFlag(string $path, ?int $storeId = null, ?string $scope = null): bool
     {
         if (empty($scope)) {
             $scope = ScopeInterface::SCOPE_STORE;
         }
 
-        if (empty($storeId)) {
-            $storeId = $this->getStore()->getId();
+        $storeId = $storeId ?: $this->currentStoreId();
+        if ($storeId === null) {
+            return $this->scopeConfig->isSetFlag($path, ScopeConfigInterface::SCOPE_TYPE_DEFAULT);
         }
         return $this->scopeConfig->isSetFlag($path, $scope, $storeId);
     }
 
     /**
-     * @param $storeId
-     * @return StoreInterface
+     * Retrieve store instance by ID or default store, or null when the shop has no stores yet.
+     *
+     * Configuration is read while setup:install is still creating the websites and stores. Asking
+     * the store manager a second time there is fatal: WebsiteRepository caches the empty result for
+     * the rest of the process, so the website setup:install creates moments later is never seen and
+     * Magento_InventorySales fails to apply its own schema patch.
      */
-    public function getStore($storeId = null): StoreInterface
+    public function getStore(?int $storeId = null): ?StoreInterface
     {
         try {
-            return $this->storeManager->getStore($storeId);
-        } catch (Exception $e) {
-            if ($store = $this->storeManager->getDefaultStoreView()) {
-                return $store;
-            }
+            return $storeId !== null ? $this->storeManager->getStore($storeId) : $this->storeManager->getStore();
+        } catch (\Throwable $e) {
+            return null;
         }
-        $stores = $this->storeManager->getStores();
-        return reset($stores);
+    }
+
+    /**
+     * Retrieve the store ID to read configuration for, or null when no store exists.
+     */
+    private function currentStoreId(): ?int
+    {
+        $store = $this->getStore();
+
+        return $store === null ? null : (int)$store->getId();
     }
 
     /**
@@ -121,7 +132,7 @@ class BaseRepository
      *
      * @return array
      */
-    protected function getStoreValueArray(string $path, int $storeId = null, string $scope = null): array
+    protected function getStoreValueArray(string $path, ?int $storeId = null, ?string $scope = null): array
     {
         $value = $this->getStoreValue($path, (int)$storeId, $scope);
 
@@ -130,10 +141,12 @@ class BaseRepository
         }
 
         try {
-            return $this->json->unserialize($value);
+            $data = $this->json->unserialize($value);
         } catch (\Exception $e) {
             return [];
         }
+
+        return is_array($data) ? $data : [];
     }
 
     /**
@@ -147,11 +160,12 @@ class BaseRepository
      */
     protected function getStoreValue(
         string $path,
-        int $storeId = null,
-        string $scope = null
+        ?int $storeId = null,
+        ?string $scope = null
     ): string {
-        if (!$storeId) {
-            $storeId = (int)$this->getStore()->getId();
+        $storeId = $storeId ?: $this->currentStoreId();
+        if ($storeId === null) {
+            return (string)$this->scopeConfig->getValue($path, ScopeConfigInterface::SCOPE_TYPE_DEFAULT);
         }
         $scope = $scope ?? ScopeInterface::SCOPE_STORE;
         return (string)$this->scopeConfig->getValue($path, $scope, (int)$storeId);
@@ -165,7 +179,7 @@ class BaseRepository
      *
      * @return string
      */
-    protected function getUncachedStoreValue(string $path, int $storeId = null): string
+    protected function getUncachedStoreValue(string $path, ?int $storeId = null): string
     {
         $collection = $this->configDataCollectionFactory->create()
             ->addFieldToSelect('value')
@@ -191,7 +205,7 @@ class BaseRepository
      * @param string $key
      * @param int|null $storeId
      */
-    protected function setConfigData(string $value, string $key, int $storeId = null): void
+    protected function setConfigData(string $value, string $key, ?int $storeId = null): void
     {
         if ($storeId) {
             $this->config->saveConfig($key, $value, 'stores', $storeId);

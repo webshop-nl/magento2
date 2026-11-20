@@ -17,7 +17,7 @@ interface InfoInterface
      * Get module info
      *
      * @api
-     * @return array
+     * @return mixed[]
      */
     public function getInfo(): array;
 }

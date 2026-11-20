@@ -35,7 +35,7 @@ interface RepositoryInterface
      * @param null $type
      * @return array
      */
-    public function getFeedLocation(int $storeId = null, $type = null): array;
+    public function getFeedLocation(?int $storeId = null, ?string $type = null): array;
 
     /**
      * Generate feed and write to file

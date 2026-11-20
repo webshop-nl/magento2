@@ -9,7 +9,6 @@ namespace WebshopNL\Connect\Controller\Adminhtml\Feed;
 
 use Magento\Backend\App\Action;
 use Magento\Framework\App\Response\RedirectInterface;
-use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Controller\ResultInterface;
 use Magento\Framework\Exception\FileSystemException;
@@ -60,7 +59,7 @@ class Preview extends Action
     }
 
     /**
-     * @return ResponseInterface|ResultInterface|void
+     * @return ResultInterface
      */
     public function execute()
     {
@@ -77,9 +76,12 @@ class Preview extends Action
         }
 
         try {
-            $this->getResponse()->setHeader('Content-type', 'application/stream+json');
-            $this->getResponse()->setBody($this->fileDriver->fileGetContents($result['path']));
-            return;
+            // A raw result carries the body; ResponseInterface declares neither setter, and the
+            // bare return left the action without a result object.
+            /** @var \Magento\Framework\Controller\Result\Raw $raw */
+            $raw = $this->resultFactory->create(ResultFactory::TYPE_RAW);
+            $raw->setHeader('Content-type', 'application/stream+json');
+            return $raw->setContents($this->fileDriver->fileGetContents($result['path']));
         } catch (FileSystemException $exception) {
             $this->messageManager->addErrorMessage($exception->getMessage());
             $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);

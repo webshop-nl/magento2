@@ -17,7 +17,7 @@ interface OrderInterface
      * Process order data
      *
      * @param int $storeId
-     * @return array
+     * @return mixed[]
      */
     public function processOrder(int $storeId): array;
 
@@ -25,7 +25,7 @@ interface OrderInterface
      * Get order status by order id
      *
      * @param int $orderId
-     * @return array
+     * @return mixed[]
      */
     public function getStatus(int $orderId): array;
 }

@@ -42,7 +42,7 @@
         </arguments>
     </type>
 
-    <type name="Magento\Framework\Console\CommandList">
+    <type name="Magento\Framework\Console\CommandListInterface">
         <arguments>
             <argument name="commands" xsi:type="array">
                 <item name="webshopnlGenerateFeed" xsi:type="object">WebshopNL\Connect\Console\Command\GenerateFeed</item>
@@ -51,6 +51,7 @@
     </type>
     <type name="WebshopNL\Connect\Console\Command\GenerateFeed">
         <arguments>
+            <argument name="options" xsi:type="object">WebshopNL\Connect\Console\CommandOptions\CreateFeedOptions\Proxy</argument>
             <argument name="feedRepository" xsi:type="object">WebshopNL\Connect\Api\Feed\RepositoryInterface\Proxy</argument>
         </arguments>
     </type>

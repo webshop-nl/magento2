@@ -9,10 +9,15 @@
          xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_include.xsd">
     <group id="debug" translate="label" sortOrder="100" showInDefault="1" showInWebsite="0" showInStore="0">
         <label>Debugging</label>
-        <field id="debug" translate="label" type="select" sortOrder="11" showInDefault="1" showInWebsite="1" showInStore="1">
+        <field id="debug" canRestore="1" translate="label" type="select" sortOrder="11" showInDefault="1" showInWebsite="1" showInStore="1">
             <label>Debug Mode</label>
             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
             <config_path>webshopnl/general/debug</config_path>
+        </field>
+        <field id="check_button_wrapper" translate="label" sortOrder="20"
+               showInDefault="1" showInWebsite="0" showInStore="0">
+            <label/>
+            <frontend_model>WebshopNL\Connect\Block\Adminhtml\System\Config\Button\CheckButtonWrapper</frontend_model>
         </field>
     </group>
 </include>

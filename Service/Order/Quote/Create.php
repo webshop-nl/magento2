@@ -12,6 +12,7 @@ use Magento\Framework\Exception\InputException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Exception\State\InputMismatchException;
+use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\Quote;
 use Magento\Quote\Model\QuoteFactory;
 use Magento\Store\Api\Data\StoreInterface;
@@ -34,6 +35,10 @@ class Create
      * @var AddressHandler
      */
     private $addressHandler;
+    /**
+     * @var CartRepositoryInterface
+     */
+    private $cartRepository;
 
     /**
      * QuoteCreation constructor.
@@ -41,15 +46,18 @@ class Create
      * @param QuoteFactory $quoteFactory
      * @param CustomerHandler $customerHandler
      * @param AddressHandler $addressHandler
+     * @param CartRepositoryInterface $cartRepository
      */
     public function __construct(
         QuoteFactory $quoteFactory,
         CustomerHandler $customerHandler,
-        AddressHandler $addressHandler
+        AddressHandler $addressHandler,
+        CartRepositoryInterface $cartRepository
     ) {
         $this->quoteFactory = $quoteFactory;
         $this->customerHandler = $customerHandler;
         $this->addressHandler = $addressHandler;
+        $this->cartRepository = $cartRepository;
     }
 
     /**
@@ -74,7 +82,8 @@ class Create
         $quote = $this->addressHandler->addAddressData($quote, $orderData);
 
         $quote->setInventoryProcessed(false);
+        $this->cartRepository->save($quote);
 
-        return $quote->save();
+        return $quote;
     }
 }

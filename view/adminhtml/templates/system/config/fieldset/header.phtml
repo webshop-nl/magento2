@@ -3,7 +3,7 @@
  * Copyright © Magmodules.eu. All rights reserved.
  * See COPYING.txt for license details.
  *
- * @var $block WebshopNL\Connect\Block\Adminhtml\WebshopNL\Header
+ * @var WebshopNL\Connect\Block\Adminhtml\WebshopNL\Header $block
  */
 ?>
 <div class="webshopnl-header">
@@ -29,3 +29,13 @@
         </button>
     </div>
 </div>
+
+<?php // Loaded here rather than through requirejs-config.js deps, which would put it on every
+      // admin page; the branding header only renders on this module's own sections. ?>
+<script type="text/x-magento-init">
+    {
+        "*": {
+            "WebshopNL_Connect/js/log-buttons": {}
+        }
+    }
+</script>

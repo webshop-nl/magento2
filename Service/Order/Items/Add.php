@@ -8,8 +8,8 @@ declare(strict_types=1);
 namespace WebshopNL\Connect\Service\Order\Items;
 
 use Exception;
-use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Catalog\Api\ProductRepositoryInterface;
+use Magento\Catalog\Model\Product;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Phrase;
 use Magento\Quote\Model\Quote;
@@ -78,6 +78,7 @@ class Add
     public function execute(Quote $quote, array $data, StoreInterface $store): int
     {
         $qty = 0;
+        $item = [];
         try {
             foreach ($data['items']['products'] as $item) {
                 $product = $this->getProductById((int)$item['remote_id'], (int)$store->getStoreId());
@@ -102,6 +103,15 @@ class Add
                 $this->itemResourceModel->save($addedItem);
                 $qty += (int)$item['quantity'];
             }
+
+            // The quote is saved before it has items, and saving it through the cart repository
+            // collects the totals. A shipping address caches the item list it sees on that first
+            // collect, and nothing in Magento ever clears that cache, so every total stayed at
+            // zero no matter how often the totals were collected afterwards. The cache has to go
+            // wherever the item list changes.
+            foreach ($quote->getAllAddresses() as $address) {
+                $address->unsetData('cached_items_all');
+            }
         } catch (Exception $exception) {
             $exceptionMsg = $this->reformatException($exception, $item, (int)$store->getStoreId());
             throw new CouldNotImportOrder($exceptionMsg);
@@ -115,25 +125,32 @@ class Add
      *
      * @param int $productId
      * @param int $storeId
-     * @return ProductInterface
+     * @return Product
      * @throws NoSuchEntityException
      */
-    private function getProductById(int $productId, int $storeId): ProductInterface
+    private function getProductById(int $productId, int $storeId): Product
     {
-        return $this->productRepository->getById($productId, false, $storeId);
+        // getById() is declared to return the interface, but the quote, the tax request and the
+        // price setters below all need the model the repository actually hands back.
+        $product = $this->productRepository->getById($productId, false, $storeId);
+        if (!$product instanceof Product) {
+            throw new NoSuchEntityException(__('Product %1 is not a catalog product.', $productId));
+        }
+
+        return $product;
     }
 
     /**
      * Calculate Product Price, depends on Tax Rate and Tax Settings
      *
      * @param array $item
-     * @param ProductInterface $product
+     * @param Product $product
      * @param StoreInterface $store
      * @param Quote $quote
      *
      * @return float
      */
-    private function getProductPrice(array $item, ProductInterface $product, StoreInterface $store, Quote $quote): float
+    private function getProductPrice(array $item, Product $product, StoreInterface $store, Quote $quote): float
     {
         $price = ((float)$item['per_item']) / 100;
         if (!$this->configProvider->getNeedsTaxCalculation('price', (int)$store->getId())) {
@@ -141,7 +158,7 @@ class Add
                 $quote->getShippingAddress(),
                 $quote->getBillingAddress(),
                 null,
-                $store
+                (int)$store->getId()
             );
             $percent = $this->taxCalculation->getRate(
                 $request->setData('product_class_id', $product->getData('tax_class_id'))
@@ -155,12 +172,12 @@ class Add
     /**
      * Set product data
      *
-     * @param ProductInterface $product
+     * @param Product $product
      * @param float $price
      *
-     * @return ProductInterface
+     * @return Product
      */
-    private function setProductData(ProductInterface $product, float $price): ProductInterface
+    private function setProductData(Product $product, float $price): Product
     {
         $product->setPrice($price)
             ->setFinalPrice($price)
