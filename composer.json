@@ -18,5 +18,27 @@
         "psr-4": {
             "WebshopNL\\Connect\\": ""
         }
+    },
+    "extra": {
+        "magmodules": {
+            "module-name": {
+                "en": "Webshop.nl",
+                "nl": "Webshop.nl"
+            },
+            "links": {
+                "product": {
+                    "en": "https://www.magmodules.eu/magento2-webshop-marketplace.html",
+                    "nl": "https://www.magmodules.nl/magento2-webshop-marketplace.html"
+                },
+                "docs": {
+                    "en": "https://www.magmodules.eu/help/magento2-webshop-marketplace.html",
+                    "nl": "https://www.magmodules.nl/help/magento2-webshop-marketplace.html"
+                },
+                "support": {
+                    "en": "https://www.magmodules.eu/support",
+                    "nl": "https://www.magmodules.nl/support"
+                }
+            }
+        }
     }
 }
