@@ -185,7 +185,13 @@ jobs:
         run: |
           cd Test/End-2-end
           npm install
-          npx playwright install --with-deps chromium
+          # The browser comes from Playwright's own CDN; --with-deps adds an apt-get install for
+          # system libraries on top of that. The Ubuntu mirror a hosted runner reaches answers 503
+          # often enough to fail the job before a single test runs, and the libraries are already
+          # in the images this workflow uses. So the browser is installed either way and the
+          # libraries are attempted separately, without taking the job down with them.
+          npx playwright install chromium
+          npx playwright install-deps chromium || echo "System libraries not installed; relying on the image."
 
       - name: Run E2E tests
         run: |
